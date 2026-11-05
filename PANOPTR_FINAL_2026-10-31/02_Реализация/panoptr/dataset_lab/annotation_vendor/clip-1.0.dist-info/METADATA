@@ -1,0 +1,15 @@
+Metadata-Version: 2.4
+Name: clip
+Version: 1.0
+Summary: Contrastive Language-Image Pre-Training model by OpenAI
+Author: OpenAI
+Requires-Python: >=3.7
+License-File: LICENSE
+Requires-Dist: ftfy
+Requires-Dist: regex
+Requires-Dist: tqdm
+Requires-Dist: torch
+Requires-Dist: torchvision
+Provides-Extra: dev
+Requires-Dist: pytest; extra == "dev"
+Dynamic: license-file

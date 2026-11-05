@@ -1,0 +1,806 @@
+{
+  "shape": [
+    240,
+    640
+  ],
+  "names": {
+    "0": "person"
+  },
+  "frames": [
+    {
+      "time_s": 0.0,
+      "reviewed": true,
+      "detections": [
+        [
+          20,
+          100,
+          45,
+          145,
+          0.9,
+          0
+        ]
+      ],
+      "ground_truth": [
+        {
+          "id": "person_a",
+          "class_name": "person",
+          "box": [
+            20,
+            100,
+            45,
+            145
+          ]
+        }
+      ]
+    },
+    {
+      "time_s": 0.05,
+      "reviewed": true,
+      "detections": [
+        [
+          25,
+          100,
+          50,
+          145,
+          0.9,
+          0
+        ]
+      ],
+      "ground_truth": [
+        {
+          "id": "person_a",
+          "class_name": "person",
+          "box": [
+            25,
+            100,
+            50,
+            145
+          ]
+        }
+      ]
+    },
+    {
+      "time_s": 0.1,
+      "reviewed": true,
+      "detections": [
+        [
+          30,
+          100,
+          55,
+          145,
+          0.9,
+          0
+        ]
+      ],
+      "ground_truth": [
+        {
+          "id": "person_a",
+          "class_name": "person",
+          "box": [
+            30,
+            100,
+            55,
+            145
+          ]
+        }
+      ]
+    },
+    {
+      "time_s": 0.15000000000000002,
+      "reviewed": true,
+      "detections": [
+        [
+          35,
+          100,
+          60,
+          145,
+          0.9,
+          0
+        ]
+      ],
+      "ground_truth": [
+        {
+          "id": "person_a",
+          "class_name": "person",
+          "box": [
+            35,
+            100,
+            60,
+            145
+          ]
+        }
+      ]
+    },
+    {
+      "time_s": 0.2,
+      "reviewed": true,
+      "detections": [
+        [
+          40,
+          100,
+          65,
+          145,
+          0.9,
+          0
+        ]
+      ],
+      "ground_truth": [
+        {
+          "id": "person_a",
+          "class_name": "person",
+          "box": [
+            40,
+            100,
+            65,
+            145
+          ]
+        }
+      ]
+    },
+    {
+      "time_s": 0.25,
+      "reviewed": true,
+      "detections": [
+        [
+          45,
+          100,
+          70,
+          145,
+          0.9,
+          0
+        ]
+      ],
+      "ground_truth": [
+        {
+          "id": "person_a",
+          "class_name": "person",
+          "box": [
+            45,
+            100,
+            70,
+            145
+          ]
+        }
+      ]
+    },
+    {
+      "time_s": 0.30000000000000004,
+      "reviewed": true,
+      "detections": [
+        [
+          50,
+          100,
+          75,
+          145,
+          0.9,
+          0
+        ]
+      ],
+      "ground_truth": [
+        {
+          "id": "person_a",
+          "class_name": "person",
+          "box": [
+            50,
+            100,
+            75,
+            145
+          ]
+        }
+      ]
+    },
+    {
+      "time_s": 0.35000000000000003,
+      "reviewed": true,
+      "detections": [
+        [
+          62,
+          100,
+          87,
+          145,
+          0.9,
+          0
+        ]
+      ],
+      "ground_truth": [
+        {
+          "id": "person_a",
+          "class_name": "person",
+          "box": [
+            62,
+            100,
+            87,
+            145
+          ]
+        }
+      ]
+    },
+    {
+      "time_s": 0.4,
+      "reviewed": true,
+      "detections": [
+        [
+          74,
+          100,
+          99,
+          145,
+          0.9,
+          0
+        ]
+      ],
+      "ground_truth": [
+        {
+          "id": "person_a",
+          "class_name": "person",
+          "box": [
+            74,
+            100,
+            99,
+            145
+          ]
+        }
+      ]
+    },
+    {
+      "time_s": 0.45,
+      "reviewed": true,
+      "detections": [
+        [
+          86,
+          100,
+          111,
+          145,
+          0.12,
+          0
+        ]
+      ],
+      "ground_truth": [
+        {
+          "id": "person_a",
+          "class_name": "person",
+          "box": [
+            86,
+            100,
+            111,
+            145
+          ]
+        }
+      ]
+    },
+    {
+      "time_s": 0.5,
+      "reviewed": true,
+      "detections": [
+        [
+          98,
+          100,
+          123,
+          145,
+          0.12,
+          0
+        ]
+      ],
+      "ground_truth": [
+        {
+          "id": "person_a",
+          "class_name": "person",
+          "box": [
+            98,
+            100,
+            123,
+            145
+          ]
+        }
+      ]
+    },
+    {
+      "time_s": 0.55,
+      "reviewed": true,
+      "detections": [
+        [
+          110,
+          100,
+          135,
+          145,
+          0.9,
+          0
+        ]
+      ],
+      "ground_truth": [
+        {
+          "id": "person_a",
+          "class_name": "person",
+          "box": [
+            110,
+            100,
+            135,
+            145
+          ]
+        }
+      ]
+    },
+    {
+      "time_s": 0.6000000000000001,
+      "reviewed": true,
+      "detections": [
+        [
+          122,
+          100,
+          147,
+          145,
+          0.9,
+          0
+        ]
+      ],
+      "ground_truth": [
+        {
+          "id": "person_a",
+          "class_name": "person",
+          "box": [
+            122,
+            100,
+            147,
+            145
+          ]
+        }
+      ]
+    },
+    {
+      "time_s": 0.65,
+      "reviewed": true,
+      "detections": [],
+      "ground_truth": []
+    },
+    {
+      "time_s": 0.7000000000000001,
+      "reviewed": true,
+      "detections": [],
+      "ground_truth": []
+    },
+    {
+      "time_s": 0.75,
+      "reviewed": true,
+      "detections": [
+        [
+          158,
+          100,
+          183,
+          145,
+          0.9,
+          0
+        ]
+      ],
+      "ground_truth": [
+        {
+          "id": "person_a",
+          "class_name": "person",
+          "box": [
+            158,
+            100,
+            183,
+            145
+          ]
+        }
+      ]
+    },
+    {
+      "time_s": 0.8,
+      "reviewed": true,
+      "detections": [
+        [
+          170,
+          100,
+          195,
+          145,
+          0.9,
+          0
+        ]
+      ],
+      "ground_truth": [
+        {
+          "id": "person_a",
+          "class_name": "person",
+          "box": [
+            170,
+            100,
+            195,
+            145
+          ]
+        }
+      ]
+    },
+    {
+      "time_s": 0.8500000000000001,
+      "reviewed": true,
+      "detections": [
+        [
+          182,
+          100,
+          207,
+          145,
+          0.9,
+          0
+        ]
+      ],
+      "ground_truth": [
+        {
+          "id": "person_a",
+          "class_name": "person",
+          "box": [
+            182,
+            100,
+            207,
+            145
+          ]
+        }
+      ]
+    },
+    {
+      "time_s": 0.9,
+      "reviewed": true,
+      "detections": [
+        [
+          194,
+          100,
+          219,
+          145,
+          0.9,
+          0
+        ]
+      ],
+      "ground_truth": [
+        {
+          "id": "person_a",
+          "class_name": "person",
+          "box": [
+            194,
+            100,
+            219,
+            145
+          ]
+        }
+      ]
+    },
+    {
+      "time_s": 0.9500000000000001,
+      "reviewed": true,
+      "detections": [
+        [
+          206,
+          100,
+          231,
+          145,
+          0.9,
+          0
+        ]
+      ],
+      "ground_truth": [
+        {
+          "id": "person_a",
+          "class_name": "person",
+          "box": [
+            206,
+            100,
+            231,
+            145
+          ]
+        }
+      ]
+    },
+    {
+      "time_s": 1.0,
+      "reviewed": true,
+      "detections": [
+        [
+          218,
+          100,
+          243,
+          145,
+          0.9,
+          0
+        ]
+      ],
+      "ground_truth": [
+        {
+          "id": "person_a",
+          "class_name": "person",
+          "box": [
+            218,
+            100,
+            243,
+            145
+          ]
+        }
+      ]
+    },
+    {
+      "time_s": 1.05,
+      "reviewed": true,
+      "detections": [
+        [
+          230,
+          100,
+          255,
+          145,
+          0.9,
+          0
+        ]
+      ],
+      "ground_truth": [
+        {
+          "id": "person_a",
+          "class_name": "person",
+          "box": [
+            230,
+            100,
+            255,
+            145
+          ]
+        }
+      ]
+    },
+    {
+      "time_s": 1.1,
+      "reviewed": true,
+      "detections": [
+        [
+          242,
+          100,
+          267,
+          145,
+          0.9,
+          0
+        ]
+      ],
+      "ground_truth": [
+        {
+          "id": "person_a",
+          "class_name": "person",
+          "box": [
+            242,
+            100,
+            267,
+            145
+          ]
+        }
+      ]
+    },
+    {
+      "time_s": 1.1500000000000001,
+      "reviewed": true,
+      "detections": [
+        [
+          254,
+          100,
+          279,
+          145,
+          0.9,
+          0
+        ]
+      ],
+      "ground_truth": [
+        {
+          "id": "person_a",
+          "class_name": "person",
+          "box": [
+            254,
+            100,
+            279,
+            145
+          ]
+        }
+      ]
+    },
+    {
+      "time_s": 1.2000000000000002,
+      "reviewed": true,
+      "detections": [
+        [
+          266,
+          100,
+          291,
+          145,
+          0.9,
+          0
+        ]
+      ],
+      "ground_truth": [
+        {
+          "id": "person_a",
+          "class_name": "person",
+          "box": [
+            266,
+            100,
+            291,
+            145
+          ]
+        }
+      ]
+    },
+    {
+      "time_s": 1.25,
+      "reviewed": true,
+      "detections": [
+        [
+          278,
+          100,
+          303,
+          145,
+          0.9,
+          0
+        ]
+      ],
+      "ground_truth": [
+        {
+          "id": "person_a",
+          "class_name": "person",
+          "box": [
+            278,
+            100,
+            303,
+            145
+          ]
+        }
+      ]
+    },
+    {
+      "time_s": 1.3,
+      "reviewed": true,
+      "detections": [
+        [
+          290,
+          100,
+          315,
+          145,
+          0.9,
+          0
+        ]
+      ],
+      "ground_truth": [
+        {
+          "id": "person_a",
+          "class_name": "person",
+          "box": [
+            290,
+            100,
+            315,
+            145
+          ]
+        }
+      ]
+    },
+    {
+      "time_s": 1.35,
+      "reviewed": true,
+      "detections": [
+        [
+          302,
+          100,
+          327,
+          145,
+          0.9,
+          0
+        ]
+      ],
+      "ground_truth": [
+        {
+          "id": "person_a",
+          "class_name": "person",
+          "box": [
+            302,
+            100,
+            327,
+            145
+          ]
+        }
+      ]
+    },
+    {
+      "time_s": 1.4000000000000001,
+      "reviewed": true,
+      "detections": [
+        [
+          314,
+          100,
+          339,
+          145,
+          0.9,
+          0
+        ]
+      ],
+      "ground_truth": [
+        {
+          "id": "person_a",
+          "class_name": "person",
+          "box": [
+            314,
+            100,
+            339,
+            145
+          ]
+        }
+      ]
+    },
+    {
+      "time_s": 1.4500000000000002,
+      "reviewed": true,
+      "detections": [
+        [
+          326,
+          100,
+          351,
+          145,
+          0.9,
+          0
+        ]
+      ],
+      "ground_truth": [
+        {
+          "id": "person_a",
+          "class_name": "person",
+          "box": [
+            326,
+            100,
+            351,
+            145
+          ]
+        }
+      ]
+    },
+    {
+      "time_s": 1.5,
+      "reviewed": true,
+      "detections": [
+        [
+          338,
+          100,
+          363,
+          145,
+          0.9,
+          0
+        ]
+      ],
+      "ground_truth": [
+        {
+          "id": "person_a",
+          "class_name": "person",
+          "box": [
+            338,
+            100,
+            363,
+            145
+          ]
+        }
+      ]
+    },
+    {
+      "time_s": 1.55,
+      "reviewed": true,
+      "detections": [
+        [
+          350,
+          100,
+          375,
+          145,
+          0.9,
+          0
+        ]
+      ],
+      "ground_truth": [
+        {
+          "id": "person_a",
+          "class_name": "person",
+          "box": [
+            350,
+            100,
+            375,
+            145
+          ]
+        }
+      ]
+    }
+  ],
+  "scope": "synthetic_software_QA_only",
+  "max_gap_s": 1.0,
+  "match_iou": 0.3
+}

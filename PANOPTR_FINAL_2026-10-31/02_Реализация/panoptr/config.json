@@ -1,0 +1,30 @@
+{
+  "window": {
+    "width": 1280,
+    "height": 760
+  },
+  "cameras": [
+    {
+      "camera_index": 0,
+      "model": "models/person_security_yolo26n.pt",
+      "device": "Auto",
+      "capture_width": 640,
+      "capture_height": 480,
+      "capture_fps": 15,
+      "inference_fps": 8,
+      "image_size": 640,
+      "confidence": 0.2
+    },
+    {
+      "camera_index": 1,
+      "model": "models/person_security_yolo26n.pt",
+      "device": "Auto",
+      "capture_width": 640,
+      "capture_height": 480,
+      "capture_fps": 15,
+      "inference_fps": 8,
+      "image_size": 640,
+      "confidence": 0.2
+    }
+  ]
+}

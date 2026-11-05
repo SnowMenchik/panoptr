@@ -1,0 +1,39 @@
+{
+  "passed": true,
+  "python": "3.12.14",
+  "prefix": "runtime",
+  "dependencies_internal": true,
+  "modules": {
+    "numpy": "runtime\\Lib\\site-packages\\numpy\\__init__.py",
+    "PIL": "runtime\\Lib\\site-packages\\PIL\\__init__.py",
+    "cv2": "runtime\\Lib\\site-packages\\cv2\\__init__.py",
+    "torch": "runtime\\Lib\\site-packages\\torch\\__init__.py",
+    "torchvision": "runtime\\Lib\\site-packages\\torchvision\\__init__.py",
+    "ultralytics": "runtime\\Lib\\site-packages\\ultralytics\\__init__.py",
+    "PySide6": "runtime\\Lib\\site-packages\\PySide6\\__init__.py",
+    "PySide6.QtWidgets": "runtime\\Lib\\site-packages\\PySide6\\QtWidgets.pyd",
+    "PySide6.QtSvg": "runtime\\Lib\\site-packages\\PySide6\\QtSvg.pyd",
+    "psutil": "runtime\\Lib\\site-packages\\psutil\\__init__.py",
+    "yaml": "runtime\\Lib\\site-packages\\yaml\\__init__.py",
+    "matplotlib": "runtime\\Lib\\site-packages\\matplotlib\\__init__.py",
+    "scipy": "runtime\\Lib\\site-packages\\scipy\\__init__.py",
+    "pandas": "runtime\\Lib\\site-packages\\pandas\\__init__.py",
+    "polars": "runtime\\Lib\\site-packages\\polars\\__init__.py",
+    "pygrabber": "runtime\\Lib\\site-packages\\pygrabber\\__init__.py",
+    "clip": "runtime\\Lib\\site-packages\\clip\\__init__.py",
+    "einops": "runtime\\Lib\\site-packages\\einops\\__init__.py",
+    "lap": "runtime\\Lib\\site-packages\\lap\\__init__.py"
+  },
+  "worker": {
+    "passed": true,
+    "bundled_python": true
+  },
+  "CUDA": {
+    "available": true,
+    "device": "Quadro RTX 6000"
+  },
+  "deployed_drone_best_epoch": 53,
+  "registry_models": 9,
+  "integrity": null,
+  "scope": "Checks this computer; industrial cameras, another Windows installation and hardware qualification are not certified."
+}

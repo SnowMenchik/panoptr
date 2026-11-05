@@ -1,0 +1,8 @@
+{
+  "application": "Panoptr",
+  "format": "portable_windows_x64_v1",
+  "python": "3.12",
+  "installed_drone_best_epoch": 53,
+  "training_stopped_epoch": 65,
+  "sources_auto_start": false
+}

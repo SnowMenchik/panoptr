@@ -1,0 +1,19 @@
+{
+  "passed": true,
+  "app_python_files_compiled": 53,
+  "application_models_CPU": 19,
+  "application_models_GPU": 19,
+  "GUI_modules": 8,
+  "annotation_modes": 15,
+  "two_video_channels": true,
+  "events_and_exports": true,
+  "route_memory": true,
+  "data_prepare_and_demo_training": true,
+  "physical_directory_relocation": true,
+  "spaces_and_cyrillic": true,
+  "multiprocessing_bundled_python": true,
+  "hardware": "Windows x64 / Quadro RTX 6000",
+  "another_physical_PC_tested": false,
+  "industrial_camera_tested": false,
+  "production_training_started": false
+}

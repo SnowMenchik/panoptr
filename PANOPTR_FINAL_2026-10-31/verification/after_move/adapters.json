@@ -1,0 +1,80 @@
+{
+  "passed": true,
+  "rows": [
+    {
+      "mode": "yolo_bbox",
+      "passed": true,
+      "proposals": 5
+    },
+    {
+      "mode": "yolo_segment",
+      "passed": true,
+      "proposals": 1
+    },
+    {
+      "mode": "detector_sam",
+      "passed": true,
+      "proposals": 5
+    },
+    {
+      "mode": "sam_prompt",
+      "passed": true,
+      "proposals": 1
+    },
+    {
+      "mode": "sam_everything",
+      "passed": true,
+      "proposals": 9
+    },
+    {
+      "mode": "fastsam_prompt",
+      "passed": true,
+      "proposals": 2
+    },
+    {
+      "mode": "fastsam_everything",
+      "passed": true,
+      "proposals": 10
+    },
+    {
+      "mode": "fastsam_text",
+      "passed": true,
+      "proposals": 1
+    },
+    {
+      "mode": "world_text",
+      "passed": true,
+      "proposals": 6
+    },
+    {
+      "mode": "yoloe_text",
+      "passed": true,
+      "proposals": 4
+    },
+    {
+      "mode": "yoloe_visual",
+      "passed": true,
+      "proposals": 3
+    },
+    {
+      "mode": "yoloe_free",
+      "passed": true,
+      "proposals": 10
+    },
+    {
+      "mode": "sam2_prompt",
+      "passed": true,
+      "proposals": 1
+    },
+    {
+      "mode": "sam2_everything",
+      "passed": true,
+      "proposals": 1
+    },
+    {
+      "mode": "semantic_model",
+      "passed": true
+    }
+  ],
+  "modes": 15
+}

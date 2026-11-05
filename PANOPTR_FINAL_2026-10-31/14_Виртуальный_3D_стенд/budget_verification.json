@@ -1,0 +1,20 @@
+{
+  "authoring_library": "@oai/artifact-tool",
+  "rows": 44,
+  "source_date": "2026-10-12",
+  "formula_checks": [
+    "base",
+    "quantity",
+    "zero_quote",
+    "missing_quote",
+    "reserve",
+    "complete_quote_gate",
+    "restored_inputs",
+    "no_formula_errors"
+  ],
+  "planning_total_rub": 14724501.6,
+  "pilot_with_reserve_rub": 14134677.6,
+  "virtual_with_reserve_rub": 589824,
+  "full_quote_total": null,
+  "missing_quotes": 44
+}

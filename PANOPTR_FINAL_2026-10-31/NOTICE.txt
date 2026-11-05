@@ -1,0 +1,9 @@
+Panoptr portable package: local application source and verified model copies.
+Python runtime, PySide6/Qt, PyTorch/CUDA, torchvision, Ultralytics and other
+third-party components retain their original licenses and attribution.
+Dependency names/versions: assets/dependencies.json.
+License texts: runtime/LICENSE.txt and runtime/Lib/site-packages/*dist-info,
+including their licenses subdirectories; some packages also carry LICENSE files.
+The DejaVu font is supplied by matplotlib, not a redistributed Microsoft Arial.
+Model/data source notes are included under documents where available.
+No official SAM3 gated weights or training datasets are redistributed here.

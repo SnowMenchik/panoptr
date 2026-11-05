@@ -1,0 +1,17 @@
+{
+  "passed": true,
+  "CUDA": true,
+  "two_channels": true,
+  "evidence_export": true,
+  "dialogs": [
+    "camera",
+    "events",
+    "path",
+    "stand",
+    "route"
+  ],
+  "portable_registry": 9,
+  "subprocess_cli": true,
+  "lab_prepare_and_semantic_pilot": true,
+  "production_weights_changed": false
+}

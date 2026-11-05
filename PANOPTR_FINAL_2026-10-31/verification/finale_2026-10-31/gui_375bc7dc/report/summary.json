@@ -1,0 +1,24 @@
+{
+  "completed_trials": 1,
+  "reviewed_valid_trials": 1,
+  "pending_review_trials": 0,
+  "changed_configuration_trials": 0,
+  "target_events": 1,
+  "detected_events": 1,
+  "missed_events": 0,
+  "event_recall": 1.0,
+  "false_events": 0,
+  "false_events_per_minute": 0.0,
+  "duplicate_cards": 0,
+  "reviewed_duration_s": 8.452999999979511,
+  "unassessed_host_poll_s": 8.312999999965541,
+  "unassessed_fraction": 0.9834378327204177,
+  "first_card_delay_s": [
+    8.437999999965541
+  ],
+  "assistance_count": 0,
+  "all_assistance_actions": 1,
+  "interrupted_trials": 0,
+  "automatic_railway_diagnosis": false,
+  "physical_camera_latency_measured": false
+}

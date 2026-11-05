@@ -1,0 +1,164 @@
+{
+  "runs": [
+    {
+      "run": "01_rail9_finetune",
+      "last_epoch": 50,
+      "epochs_recorded": 80,
+      "metrics": {
+        "metrics/precision(B)": 0.59966,
+        "metrics/recall(B)": 0.45988,
+        "metrics/mAP50(B)": 0.45163,
+        "metrics/mAP50-95(B)": 0.20712,
+        "val/box_loss": 2.22664,
+        "val/cls_loss": 2.67812,
+        "val/l1_loss": 0.02239,
+        "fitness": 0.20712
+      },
+      "metrics_origin": "Saved checkpoint validation, not independent common test.",
+      "checkpoint": "C:\\Users\\1\\Documents\\ChatGPT\\vsm\\PANOPTR_PORTABLE_2026-10-19\\02_Реализация\\panoptr\\models\\rail9_finetuned_2026.pt",
+      "state": "candidate",
+      "best_checkpoint_exists": true
+    },
+    {
+      "run": "02_neu_defect_seg",
+      "last_epoch": 76,
+      "epochs_recorded": 106,
+      "metrics": {
+        "metrics/precision(B)": 0.92851,
+        "metrics/recall(B)": 0.81814,
+        "metrics/mAP50(B)": 0.89126,
+        "metrics/mAP50-95(B)": 0.61741,
+        "metrics/precision(M)": 0.88386,
+        "metrics/recall(M)": 0.81102,
+        "metrics/mAP50(M)": 0.85692,
+        "metrics/mAP50-95(M)": 0.49411,
+        "val/box_loss": 1.32654,
+        "val/seg_loss": 2.58644,
+        "val/cls_loss": 1.07143,
+        "val/l1_loss": 0.01731,
+        "val/sem_loss": 0.0,
+        "fitness": 1.11151
+      },
+      "metrics_origin": "Saved checkpoint validation, not independent common test.",
+      "checkpoint": "C:\\Users\\1\\Documents\\ChatGPT\\vsm\\PANOPTR_PORTABLE_2026-10-19\\02_Реализация\\panoptr\\models\\rail_surface_neu_seg_2026.pt",
+      "state": "candidate_near_surface",
+      "best_checkpoint_exists": true
+    },
+    {
+      "run": "03_multiclass8",
+      "last_epoch": 34,
+      "epochs_recorded": 69,
+      "metrics": {
+        "metrics/precision(B)": 0.36209,
+        "metrics/recall(B)": 0.29877,
+        "metrics/mAP50(B)": 0.25175,
+        "metrics/mAP50-95(B)": 0.09182,
+        "val/box_loss": 2.38812,
+        "val/cls_loss": 3.15885,
+        "val/l1_loss": 0.01598,
+        "fitness": 0.09182
+      },
+      "metrics_origin": "Saved checkpoint validation, not independent common test.",
+      "checkpoint": "C:\\Users\\1\\Documents\\ChatGPT\\vsm\\PANOPTR_PORTABLE_2026-10-19\\02_Реализация\\panoptr\\models\\rail_multiclass8_2026.pt",
+      "state": "experimental",
+      "best_checkpoint_exists": true
+    },
+    {
+      "run": "04_railfod_obstacles",
+      "last_epoch": 72,
+      "epochs_recorded": 102,
+      "metrics": {
+        "metrics/precision(B)": 0.97021,
+        "metrics/recall(B)": 0.96591,
+        "metrics/mAP50(B)": 0.988,
+        "metrics/mAP50-95(B)": 0.97427,
+        "val/box_loss": 0.20779,
+        "val/cls_loss": 0.14433,
+        "val/l1_loss": 0.0008,
+        "fitness": 0.97427
+      },
+      "metrics_origin": "Saved checkpoint validation, not independent common test.",
+      "checkpoint": "C:\\Users\\1\\Documents\\ChatGPT\\vsm\\PANOPTR_PORTABLE_2026-10-19\\02_Реализация\\panoptr\\models\\overhead_railfod4_2026.pt",
+      "state": "candidate_synthetic",
+      "best_checkpoint_exists": true
+    },
+    {
+      "run": "05_rail400_baseline",
+      "last_epoch": 69,
+      "epochs_recorded": 99,
+      "metrics": {
+        "metrics/precision(B)": 0.63735,
+        "metrics/recall(B)": 0.37226,
+        "metrics/mAP50(B)": 0.46991,
+        "metrics/mAP50-95(B)": 0.26037,
+        "val/box_loss": 1.83216,
+        "val/cls_loss": 4.74117,
+        "val/l1_loss": 0.00954,
+        "fitness": 0.26037
+      },
+      "metrics_origin": "Saved checkpoint validation, not independent common test.",
+      "checkpoint": "C:\\Users\\1\\Documents\\ChatGPT\\vsm\\PANOPTR_PORTABLE_2026-10-19\\02_Реализация\\panoptr\\models\\rail400_detect8_2026.pt",
+      "state": "experimental_reserve",
+      "best_checkpoint_exists": true
+    },
+    {
+      "run": "person_railbench07_2026",
+      "last_epoch": 40,
+      "epochs_recorded": 40,
+      "metrics": {},
+      "metrics_origin": "Saved checkpoint validation, not independent common test.",
+      "checkpoint": "C:\\Users\\1\\Documents\\ChatGPT\\vsm\\PANOPTR_PORTABLE_2026-10-19\\02_Реализация\\panoptr\\models\\person_railbench07_2026.pt",
+      "state": "installed snapshot",
+      "best_checkpoint_exists": true
+    },
+    {
+      "run": "person_synrailobs08_2026",
+      "last_epoch": 36,
+      "epochs_recorded": 36,
+      "metrics": {},
+      "metrics_origin": "Saved checkpoint validation, not independent common test.",
+      "checkpoint": "C:\\Users\\1\\Documents\\ChatGPT\\vsm\\PANOPTR_PORTABLE_2026-10-19\\02_Реализация\\panoptr\\models\\person_synrailobs08_2026.pt",
+      "state": "installed snapshot",
+      "best_checkpoint_exists": true
+    },
+    {
+      "run": "rock_synrailobs09_2026",
+      "last_epoch": 120,
+      "epochs_recorded": 120,
+      "metrics": {},
+      "metrics_origin": "Saved checkpoint validation, not independent common test.",
+      "checkpoint": "C:\\Users\\1\\Documents\\ChatGPT\\vsm\\PANOPTR_PORTABLE_2026-10-19\\02_Реализация\\panoptr\\models\\rock_synrailobs09_2026.pt",
+      "state": "installed snapshot",
+      "best_checkpoint_exists": true
+    },
+    {
+      "run": "drone_broad10_interim_2026",
+      "last_epoch": 53,
+      "epochs_recorded": 53,
+      "metrics": {
+        "epoch": "53",
+        "time": "44339.2",
+        "train/box_loss": "1.16118",
+        "train/cls_loss": "0.48289",
+        "train/l1_loss": "0.00804",
+        "metrics/precision(B)": "0.92381",
+        "metrics/recall(B)": "0.86429",
+        "metrics/mAP50(B)": "0.93054",
+        "metrics/mAP50-95(B)": "0.64694",
+        "val/box_loss": "1.15599",
+        "val/cls_loss": "0.58216",
+        "val/l1_loss": "0.00363",
+        "lr/pg0": "0.000372533",
+        "lr/pg1": "0.000372533",
+        "lr/pg2": "0.000372533"
+      },
+      "metrics_origin": "Saved checkpoint validation, not independent common test.",
+      "checkpoint": "C:\\Users\\1\\Documents\\ChatGPT\\vsm\\PANOPTR_PORTABLE_2026-10-19\\02_Реализация\\panoptr\\models\\drone_broad10_interim_2026.pt",
+      "state": "interim_from_ongoing_training",
+      "best_checkpoint_exists": true
+    }
+  ],
+  "ranking_performed": false,
+  "training_started": false,
+  "warning": "Metrics from different datasets cannot determine a common winner. Training datasets and resumable runs are not part of this app folder."
+}

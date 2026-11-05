@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "coordinate_format": "absolute_xyxy",
+  "objects": [
+    {
+      "frame": 125,
+      "class_id": 0,
+      "bbox_xyxy": [320, 180, 520, 410]
+    }
+  ]
+}

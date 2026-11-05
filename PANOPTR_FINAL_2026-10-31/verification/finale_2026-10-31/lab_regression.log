@@ -1,0 +1,104 @@
+������ 1 / 3
+������ 2 / 3
+������ 3 / 3
+test_bbox_never_invented_as_mask (test_annotation.AnnotationChecks.test_bbox_never_invented_as_mask) ... ok
+������ 1 / 3
+������ 2 / 3
+������ 3 / 3
+test_exact_rle_holes_and_disconnected_parts (test_annotation.AnnotationChecks.test_exact_rle_holes_and_disconnected_parts) ... ok
+������ 1 / 3
+������ 2 / 3
+������ 3 / 3
+��������� 1 / 2
+��������� 1 / 2
+��������� 1 / 2
+��������� 1 / 2
+test_four_exports_prepare_verify_and_keep_groups (test_annotation.AnnotationChecks.test_four_exports_prepare_verify_and_keep_groups) ... ok
+������ 1 / 3
+������ 2 / 3
+������ 3 / 3
+test_incomplete_clip_has_actionable_error_instead_of_attribute_error (test_annotation.AnnotationChecks.test_incomplete_clip_has_actionable_error_instead_of_attribute_error) ... ok
+������ 1 / 3
+������ 2 / 3
+������ 3 / 3
+��������� 1 / 1
+test_interactive_refinement_preserves_other_objects_requires_review (test_annotation.AnnotationChecks.test_interactive_refinement_preserves_other_objects_requires_review) ... ok
+������ 1 / 3
+������ 2 / 3
+������ 3 / 3
+test_invalid_modes_missing_sam3_weights_and_confidence (test_annotation.AnnotationChecks.test_invalid_modes_missing_sam3_weights_and_confidence) ... ok
+������ 1 / 3
+������ 2 / 3
+������ 3 / 3
+test_mask_edit_keeps_old_mask_and_empty_erase_refused (test_annotation.AnnotationChecks.test_mask_edit_keeps_old_mask_and_empty_erase_refused) ... ok
+������ 1 / 3
+������ 2 / 3
+������ 3 / 3
+��������� 1 / 1
+test_model_batch_protects_reviewed_frames_and_empty_is_unreviewed (test_annotation.AnnotationChecks.test_model_batch_protects_reviewed_frames_and_empty_is_unreviewed) ... ok
+������ 1 / 3
+������ 2 / 3
+������ 3 / 3
+test_person_filter_does_not_merge_other_classes (test_annotation.AnnotationChecks.test_person_filter_does_not_merge_other_classes) ... ok
+Импорт 1 / 3
+Импорт 2 / 3
+Импорт 3 / 3
+test_review_required_and_unassigned_class_block (test_annotation.AnnotationChecks.test_review_required_and_unassigned_class_block) ... ok
+Импорт 1 / 3
+Импорт 2 / 3
+Импорт 3 / 3
+test_revision_and_provenance_guard (test_annotation.AnnotationChecks.test_revision_and_provenance_guard) ... ok
+Импорт 1 / 3
+Импорт 2 / 3
+Импорт 3 / 3
+test_semantic_overlap_explicit_ignore_or_last (test_annotation.AnnotationChecks.test_semantic_overlap_explicit_ignore_or_last) ... ok
+Проверено 1 / 4
+test_coco_ids_are_explicitly_remapped (test_lab.DataChecks.test_coco_ids_are_explicitly_remapped) ... ok
+test_path_traversal_in_csv_is_rejected (test_lab.DataChecks.test_path_traversal_in_csv_is_rejected) ... ok
+Проверено 1 / 12
+Проверено 1 / 12
+test_rehearsal_detects_real_errors (test_lab.DataChecks.test_rehearsal_detects_real_errors) ... ok
+test_rgb_palette_and_ignore_values (test_lab.DataChecks.test_rgb_palette_and_ignore_values) ... ok
+test_shared_gpu_lock_refuses_concurrent_launch_without_touching_gpu (test_lab.DataChecks.test_shared_gpu_lock_refuses_concurrent_launch_without_touching_gpu) ... ok
+Проверено 1 / 12
+test_split_groups_and_immutable_sources (test_lab.DataChecks.test_split_groups_and_immutable_sources) ... ok
+Проверено 1 / 12
+Проверено 1 / 12
+test_unknown_group_and_missing_class_mapping_block_preparation (test_lab.DataChecks.test_unknown_group_and_missing_class_mapping_block_preparation) ... ok
+Кадр 0
+Кадр 2
+Кадр 4
+test_video_frame_indices_and_single_scene (test_lab.DataChecks.test_video_frame_indices_and_single_scene) ... ok
+Проверено 1 / 12
+test_yolo_polygons_do_not_become_boxes (test_lab.DataChecks.test_yolo_polygons_do_not_become_boxes) ... ok
+Проверено 1 / 12
+Оценка 1 / 4
+Эпоха 1/1: loss=0.43193; val mIoU=0.9012
+Оценка 1 / 4
+Оценка 1 / 4
+Оценка 1 / 4
+Эпоха 1/1: loss=0.30066; val mIoU=0.9107
+Экспорт 1 / 12
+Экспорт 2 / 12
+Экспорт 3 / 12
+Экспорт 4 / 12
+Экспорт 5 / 12
+Экспорт 6 / 12
+Экспорт 7 / 12
+Экспорт 8 / 12
+Экспорт 9 / 12
+Экспорт 10 / 12
+Экспорт 11 / 12
+Экспорт 12 / 12
+test_cpu_training_resume_compare_export_original_geometry (test_lab.SemanticFlow.test_cpu_training_resume_compare_export_original_geometry) ... ok
+Проверено 1 / 12
+Оценка 1 / 4
+Эпоха 1/2: loss=0.43193; val mIoU=0.9012
+Оценка 1 / 4
+Эпоха 2/2: loss=0.27855; val mIoU=0.8988
+test_resume_restores_completed_epoch_after_interruption (test_lab.SemanticFlow.test_resume_restores_completed_epoch_after_interruption) ... ok
+
+----------------------------------------------------------------------
+Ran 23 tests in 13.172s
+
+OK
