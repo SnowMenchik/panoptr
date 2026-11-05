@@ -1,3 +1,9 @@
+*.pdf filter=lfs diff=lfs merge=lfs -text
+*.pptx filter=lfs diff=lfs merge=lfs -text
+*.dll filter=lfs diff=lfs merge=lfs -text
+*.exe filter=lfs diff=lfs merge=lfs -text
+*.avi filter=lfs diff=lfs merge=lfs -text
+*.png filter=lfs diff=lfs merge=lfs -text
 /PANOPTR_FINAL_2026-10-31/10_Лаборатория_данных/annotation_models/clip/ViT-B-32.pt filter=lfs diff=lfs merge=lfs -text
 /PANOPTR_FINAL_2026-10-31/10_Лаборатория_данных/annotation_models/mobileclip2_b.ts filter=lfs diff=lfs merge=lfs -text
 /PANOPTR_FINAL_2026-10-31/10_Лаборатория_данных/annotation_models/sam2.1_t.pt filter=lfs diff=lfs merge=lfs -text
