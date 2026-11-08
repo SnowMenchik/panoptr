@@ -1,0 +1,19 @@
+{
+  "settings_version": "0.0.8",
+  "datasets_dir": "/home/user/q_repo/PANOPTR_FINAL_2026-10-31/data/datasets",
+  "weights_dir": "/home/user/q_repo/PANOPTR_FINAL_2026-10-31/data/weights",
+  "runs_dir": "/home/user/q_repo/PANOPTR_FINAL_2026-10-31/data/runs",
+  "uuid": "961f9daac8db54fa510cb609263a6ee0a8d791bce1f40ede7698194ee43b3898",
+  "sync": true,
+  "api_key": "",
+  "openai_api_key": "",
+  "clearml": true,
+  "comet": true,
+  "dvc": true,
+  "mlflow": true,
+  "raytune": true,
+  "tensorboard": false,
+  "wandb": false,
+  "vscode_msg": true,
+  "openvino_msg": true
+}
