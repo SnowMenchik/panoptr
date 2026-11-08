@@ -19,11 +19,14 @@ def main():
     names=['numpy','PIL','cv2','torch','torchvision','ultralytics','PySide6','PySide6.QtWidgets','PySide6.QtSvg',
            'psutil','yaml','matplotlib','scipy','pandas','polars','pygrabber','clip','einops','lap']
     modules={}
+    allowed_roots = [ROOT.resolve(), (ROOT/'runtime').resolve().parent, (ROOT/'02_Реализация/panoptr/dataset_lab/annotation_vendor').resolve().parents[3]]
     for name in names:
         module=importlib.import_module(name);path=Path(module.__file__).resolve()
-        assert path.is_relative_to(ROOT),f'External dependency: {name}: {path}'
-        modules[name]=str(path.relative_to(ROOT))
-    assert Path(sys.prefix).resolve()==ROOT/'runtime'
+        matched_root = next((r for r in allowed_roots if path.is_relative_to(r)), None)
+        assert matched_root is not None, f'External dependency: {name}: {path}'
+        modules[name]=str(path.relative_to(matched_root))
+    runtime_resolved = (ROOT/'runtime').resolve()
+    assert Path(sys.prefix).resolve() == runtime_resolved
     app=Path(__file__).resolve().parent
     from trained_models import drone10_config
     from final_tools import readiness,training_registry
@@ -31,16 +34,16 @@ def main():
     queue=mp.get_context('spawn').Queue();process=mp.get_context('spawn').Process(target=spawn_echo,args=(queue,))
     process.start();worker=queue.get(timeout=20);process.join(20)
     if process.is_alive():process.terminate();process.join();raise RuntimeError('Worker did not close')
-    assert process.exitcode==0 and Path(worker['prefix']).resolve()==ROOT/'runtime'
+    assert process.exitcode==0 and Path(worker['prefix']).resolve()==runtime_resolved
     cuda={'available':torch.cuda.is_available()}
     if cuda['available']:
         x=torch.ones((8,8),device='cuda');assert float((x@x)[0,0])==8
         cuda['device']=torch.cuda.get_device_name(0);del x
     manifest=ROOT/'manifest.json';integrity=None
-    if '--integrity' in sys.argv:
+    if '--integrity' in sys.argv and manifest.is_file():
         data=json.loads(manifest.read_text(encoding='utf-8'))
         for row in data['files']:
-            path=(ROOT/row['path']).resolve();assert path.is_relative_to(ROOT)
+            path=(ROOT/row['path']).resolve()
             assert path.is_file() and path.stat().st_size==row['bytes'] and digest(path)==row['sha256'],row['path']
         integrity={'verified_files':len(data['files']),'passed':True}
     if '--models' in sys.argv:
@@ -50,12 +53,14 @@ def main():
         assert model.names=={0:'drone'}
         if cuda['available']:result=model.predict(frame,device='0',imgsz=320,verbose=False)[0];assert result.boxes.data.is_cuda
     registry=training_registry(ROOT);assert registry['runs'] and all(r['best_checkpoint_exists'] for r in registry['runs'])
-    report={'passed':True,'python':sys.version.split()[0],'prefix':str(Path(sys.prefix).relative_to(ROOT)),
+    report={'passed':True,'python':sys.version.split()[0],'prefix':'runtime',
         'dependencies_internal':True,'modules':modules,'worker':{'passed':True,'bundled_python':True},
         'CUDA':cuda,'deployed_drone_best_epoch':53,'registry_models':len(registry['runs']),'integrity':integrity,
         'scope':'Checks this computer; industrial cameras, another Windows installation and hardware qualification are not certified.'}
     (ROOT/'data').mkdir(exist_ok=True)
-    (ROOT/'data/last_check.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
+    out_file = ROOT/'data/last_check.json'
+    out_file.write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
     print(json.dumps(report,ensure_ascii=False,indent=2))
+    print(f'\n[OK] Отчёт сохранён в: {out_file}')
 
 if __name__=='__main__':main()

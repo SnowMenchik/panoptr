@@ -1232,7 +1232,7 @@ class MainWindow(QMainWindow):
         from final_store import EventStore
         from final_core import save_json
         from datetime import datetime
-        session=Path(config.get('event_session') or ROOT.parents[1]/'11_Финальный_модуль/sessions'/datetime.now().strftime('%Y%m%d_%H%M%S_%f'))
+        session=Path(config.get('event_session') or ROOT.parents[1]/'data/sessions'/datetime.now().strftime('%Y%m%d_%H%M%S_%f'))
         self.event_store=EventStore(session); save_json(session/'config.json',config)
         for panel in self.panels: panel.event_store=self.event_store; save_json(session/f'channel_{panel.channel}_policy.json',panel.policy)
         self.final_dashboard=None; self._telemetry_at=0.
