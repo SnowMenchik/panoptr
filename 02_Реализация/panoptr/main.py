@@ -124,52 +124,81 @@ def discover_camera_devices() -> list[CameraDevice]:
     return []
 
 
+def _log_camera_debug(msg: str) -> None:
+    try:
+        log_dir = ROOT.parents[1] / "data"
+        log_dir.mkdir(parents=True, exist_ok=True)
+        with (log_dir / "camera_debug.log").open("a", encoding="utf-8") as f:
+            f.write(f"[{time.strftime('%H:%M:%S')}] {msg}\n")
+    except Exception:
+        pass
+
+
 def _open_camera_capture(index, width: int, height: int, fps: int):
-    """Opens a camera or stream with backend, codec (MJPG/native), and resolution fallback."""
+    """Opens a camera or stream with backend, codec (MJPG/native/default), and MSMF index mapping."""
     if sys.platform == "win32" and isinstance(index, int):
         msmf = getattr(cv2, "CAP_MSMF", cv2.CAP_ANY)
-        candidates = [
-            (cv2.CAP_DSHOW, True),
-            (cv2.CAP_DSHOW, False),
-            (msmf, True),
-            (msmf, False),
-            (cv2.CAP_ANY, False),
-        ]
-        resolutions = [(width, height)]
-        if (width, height) != (640, 480):
-            resolutions.append((640, 480))
-        if (width, height) != (320, 240):
-            resolutions.append((320, 240))
-    else:
-        candidates = [(cv2.CAP_ANY, isinstance(index, int))]
-        if isinstance(index, int):
-            candidates.append((cv2.CAP_ANY, False))
-        resolutions = [(width, height)]
-
-    for req_w, req_h in resolutions:
-        for backend, use_mjpg in candidates:
-            capture = cv2.VideoCapture(index, backend)
-            if not capture.isOpened():
-                capture.release()
-                continue
-            try:
-                capture.set(cv2.CAP_PROP_BUFFERSIZE, 1)
-            except Exception:
-                pass
-            capture.set(cv2.CAP_PROP_FRAME_WIDTH, req_w)
-            capture.set(cv2.CAP_PROP_FRAME_HEIGHT, req_h)
-            if use_mjpg and isinstance(index, int):
-                try:
-                    capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"MJPG"))
-                except Exception:
+        # Compute physical camera ordinal in case DirectShow has virtual cameras (e.g. OBS at ID 0)
+        # that are skipped by Media Foundation (CAP_MSMF) or CAP_ANY.
+        alt_indices = [index]
+        try:
+            devices = discover_camera_devices()
+            physical = [d.index for d in devices if not d.is_virtual]
+            if index in physical:
+                phys_ord = physical.index(index)
+                if phys_ord not in alt_indices:
+                    alt_indices.append(phys_ord)
+            for probe_idx in (0, 1, 2, 3):
+                if probe_idx != index and probe_idx not in alt_indices and probe_idx not in [d.index for d in devices if d.is_virtual]:
                     pass
-            capture.set(cv2.CAP_PROP_FPS, fps)
-            for _ in range(12):
-                ok, frame = capture.read()
-                if ok and frame is not None and frame.size:
-                    return capture, frame
-                time.sleep(0.04)
+        except Exception:
+            pass
+
+        # (idx_to_open, backend, backend_name, mode)
+        # mode: 'mjpg' = set width/height + MJPG, 'native' = set width/height only, 'raw' = no .set() calls at all
+        attempts = [
+            (index, cv2.CAP_DSHOW, "DSHOW", "mjpg"),
+            (index, cv2.CAP_DSHOW, "DSHOW", "raw"),
+            (index, cv2.CAP_DSHOW, "DSHOW", "native"),
+            (index, msmf, "MSMF", "raw"),
+            (index, msmf, "MSMF", "mjpg"),
+        ]
+        for alt_idx in alt_indices:
+            if alt_idx != index:
+                attempts.append((alt_idx, msmf, f"MSMF(phys={alt_idx})", "raw"))
+                attempts.append((alt_idx, msmf, f"MSMF(phys={alt_idx})", "mjpg"))
+        attempts.append((index, cv2.CAP_ANY, "ANY", "raw"))
+    else:
+        attempts = [
+            (index, cv2.CAP_ANY, "ANY", "mjpg" if isinstance(index, int) else "raw"),
+            (index, cv2.CAP_ANY, "ANY", "raw"),
+        ]
+
+    for open_idx, backend, bname, mode in attempts:
+        t0 = time.perf_counter()
+        capture = cv2.VideoCapture(open_idx, backend)
+        if not capture.isOpened():
+            _log_camera_debug(f"cam={index} try idx={open_idx} {bname}/{mode}: isOpened=False ({time.perf_counter()-t0:.2f}s)")
             capture.release()
+            continue
+        try:
+            if mode in ("mjpg", "native") and isinstance(open_idx, int):
+                capture.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+                capture.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+                if mode == "mjpg":
+                    capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"MJPG"))
+        except Exception:
+            pass
+        for read_try in range(6):
+            ok, frame = capture.read()
+            if ok and frame is not None and frame.size:
+                _log_camera_debug(
+                    f"cam={index} SUCCESS idx={open_idx} {bname}/{mode} shape={frame.shape} on read #{read_try+1} ({time.perf_counter()-t0:.2f}s)"
+                )
+                return capture, frame
+            time.sleep(0.03)
+        _log_camera_debug(f"cam={index} try idx={open_idx} {bname}/{mode}: opened but read() returned False ({time.perf_counter()-t0:.2f}s)")
+        capture.release()
     return None, None
 
 
@@ -190,7 +219,7 @@ def camera_process_main(
     while not stop_event.is_set():
         capture, first_frame = _open_camera_capture(index, width, height, fps)
         if capture is None:
-            errors.put(f"{source_label} не открылся; повтор подключения…")
+            errors.put(f"{source_label} не открылся (см. data/camera_debug.log); повтор подключения…")
             stop_event.wait(1.0)
             continue
 
@@ -207,7 +236,7 @@ def camera_process_main(
                     ok, frame = capture.read()
                 if not ok or frame is None or not frame.size:
                     failures += 1
-                    if failures >= 15:
+                    if failures >= 20:
                         errors.put(f"{source_label}: потерян поток; переподключение…")
                         break
                     stop_event.wait(0.05)
@@ -392,29 +421,7 @@ class CameraCapture:
                 pass
         elif self._shared_primary is not None:
             self.error = self._shared_primary.error
-        if (
-            self._shared_primary is None
-            and self.error
-            and "не открылся" in self.error
-            and isinstance(self._camera_key, int)
-        ):
-            with _ACTIVE_CAMERAS_LOCK:
-                fallback = next(
-                    (
-                        cam for key, cam in _ACTIVE_CAMERAS.items()
-                        if cam is not self
-                        and isinstance(key, int)
-                        and cam._process is not None
-                        and cam._process.is_alive()
-                        and cam._sequence is not None
-                        and int(cam._sequence.value) > 0
-                    ),
-                    None,
-                )
-            if fallback is not None:
-                w, h = self.width, self.height
-                self.stop()
-                self.start(fallback._camera_key, w, h, 30)
+
         if self._sequence is None or self._buffer is None:
             return -1, None
         lock=self._sequence.get_lock()
@@ -1081,8 +1088,8 @@ class CameraPanel(QGroupBox):
 
         sequence, frame = self.capture.latest()
         now = time.monotonic()
-        watchdog_limit = 8.0 if sequence <= 0 else 3.5
-        if self.capture.frame_age() > watchdog_limit and now - self.last_capture_restart > 4.5 and self.source_kind!='file':
+        watchdog_limit = 18.0 if sequence <= 0 else 4.0
+        if self.capture.frame_age() > watchdog_limit and now - self.last_capture_restart > 12.0 and self.source_kind!='file':
             camera_index = self.source_path.text().strip() if self.source_kind=='stream' else self.selected_camera_index()
             if camera_index is not None:
                 self.capture_restart_count += 1
