@@ -49,8 +49,15 @@ if "%VALID_PY%"=="1" (
     set "PYTHONHOME=!RUN_ROOT!\runtime"
     cd /d "!RUN_ROOT!"
     "%PY_EXE%" -s -E "%RUN_ROOT%\start.py" check %*
-    if errorlevel 1 pause
-    exit /b 0
+    set "EXIT_CODE=!errorlevel!"
+    if /I not "%RUN_ROOT%"=="%HERE:~0,-1%" (
+        if not exist "%HERE%data" mkdir "%HERE%data"
+        if exist "!RUN_ROOT!\data\last_check.json" copy /Y "!RUN_ROOT!\data\last_check.json" "%HERE%data\last_check.json" >nul
+        if exist "!RUN_ROOT!\data\tests" xcopy /E /I /Y "!RUN_ROOT!\data\tests" "%HERE%data\tests" >nul
+        echo [PANOPTR] Отчёты также скопированы в: %HERE%data
+    )
+    if not "!EXIT_CODE!"=="0" pause
+    exit /b !EXIT_CODE!
 )
 
 echo [!] Не найдена папка runtime\python.exe.
