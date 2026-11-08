@@ -15,7 +15,7 @@ WORK=ROOT.parents[1]/'11_Финальный_модуль'
 
 class FinalDashboard(QDialog):
     def __init__(self,panels,store,parent=None):
-        super().__init__(parent); self.panels=panels; self.store=store; self.view_store=store; self.setWindowTitle('Panoptr — события и подготовка финала'); self.resize(1180,850)
+        super().__init__(None); self.setWindowFlags(Qt.Window | Qt.WindowSystemMenuHint | Qt.WindowMinMaxButtonsHint | Qt.WindowCloseButtonHint); self.panels=panels; self.store=store; self.view_store=store; self.setWindowTitle('Panoptr — события и подготовка финала'); self.resize(1180,850)
         self.process=QProcess(self); self.process.setProcessChannelMode(QProcess.MergedChannels); self.process.readyReadStandardOutput.connect(self.read_log); self.process.finished.connect(self.process_finished)
         self.process.errorOccurred.connect(self.process_error); self.busy=[]; self.rows=[]; layout=QVBoxLayout(self); self.tabs=QTabWidget(); layout.addWidget(self.tabs)
         self.build_events(); self.build_rehearsal(); self.build_review(); self.build_readiness(); self.build_compare()

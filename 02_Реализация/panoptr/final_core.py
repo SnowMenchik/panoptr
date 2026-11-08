@@ -18,7 +18,7 @@ DEFAULT_ROLES={**{k:'person' for k in ['person','human']},**{k:'obstacle' for k 
     **{k:'defect' for k in ['missing','displaced','inverted','deformed','fractured','cracks','crack','corrosion','flakings','shelling','spalling','squats','wheel-burn']},
     **{k:'defect' for k in TRAINED_DEFECT_CLASSES},**{k:'overhead_object' for k in OVERHEAD_CLASSES},
     'drone':'aerial_object','dirt':'normal','unknown':'ignore','arc':'transient','spark':'transient','sparking':'transient'}
-DEFAULT_POLICY={'max_age_ms':1500.,'min_blur':0.,'max_dark_fraction':.95,'max_bright_fraction':.95,
+DEFAULT_POLICY={'max_age_ms':3500.,'min_blur':0.,'max_dark_fraction':.95,'max_bright_fraction':.95,
     'speed_kmh':0.,'visible_length_m':0.,'min_samples':3.,'near_pixels':20.,'min_zone_overlap':.05,
     'roles':DEFAULT_ROLES,'zone':[],'group_gap_s':1.,'track_iou':.2,'confirm_hits':2,
     'tracker':'iou','path_enabled':False,'geometry_model':'','geometry_confidence':.35,'geometry_image_size':640,

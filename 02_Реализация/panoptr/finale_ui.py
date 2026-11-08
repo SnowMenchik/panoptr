@@ -8,7 +8,8 @@ from finale import PROFILES,TASKS,profile,configuration,TrialSeries,write,summar
 
 class FinaleDialog(QDialog):
     def __init__(self,window,parent=None):
-        super().__init__(parent or window);self.window=window;self.series=None;self.read_only_series=False;self.current_config=None;self.last_signature=None;self.last_running=None;self.last_error=None;self._model_cache=None
+        super().__init__(None);self.window=window
+        self.setWindowFlags(Qt.Window | Qt.WindowSystemMenuHint | Qt.WindowMinMaxButtonsHint | Qt.WindowCloseButtonHint);self.series=None;self.read_only_series=False;self.current_config=None;self.last_signature=None;self.last_running=None;self.last_error=None;self._model_cache=None
         self.setWindowTitle('Panoptr — полигон и финал');self.resize(1180,940);self.root=Path(__file__).resolve().parent
         outer=QVBoxLayout(self);note=QLabel('Главная задача: найти видимый признак, сохранить доказательство и передать человеку. Профиль колеи не является калибровкой; без неё метры неизвестны.');note.setWordWrap(True);outer.addWidget(note)
         self.tabs=QTabWidget();outer.addWidget(self.tabs);self.build_setup();self.build_trials();self.build_help()
@@ -105,6 +106,7 @@ class FinaleDialog(QDialog):
             if not p.running:p.toggle_camera()
         self.last_signature=self.fingerprint();self.last_running=self.panel().running
         self.state.setText('Оба канала (Канал 1 и Канал 2) запущены одновременно.')
+        self.window.showNormal();self.window.raise_();self.window.activateWindow()
     def stop_channel(self):
         if self.series:self.series.action('stop_channel','Остановка канала испытателем')
         if self.panel().running:self.panel().stop()

@@ -99,39 +99,29 @@ class InferenceJob:
 
 def discover_camera_devices() -> list[CameraDevice]:
     """Returns user-facing camera names in the DirectShow/OpenCV index order."""
-    devices_list: list[CameraDevice] = []
     if sys.platform == "win32":
         try:
             from pygrabber.dshow_graph import FilterGraph
 
             names = FilterGraph().get_input_devices()
             if names:
-                devices_list = [CameraDevice(index, name) for index, name in enumerate(names)]
+                return [CameraDevice(index, name) for index, name in enumerate(names)]
         except Exception:
             pass
 
-    # Merge or fall back to QtMultimedia so Media Foundation / secondary USB cameras are also visible.
     try:
         from PySide6.QtMultimedia import QMediaDevices
 
         qt_devices = QMediaDevices.videoInputs()
         if qt_devices:
-            if not devices_list:
-                return [
-                    CameraDevice(index, device.description())
-                    for index, device in enumerate(qt_devices)
-                ]
-            known_names = {d.name.strip().casefold() for d in devices_list}
-            for qt_index, device in enumerate(qt_devices):
-                desc = device.description().strip()
-                if qt_index >= len(devices_list) or desc.casefold() not in known_names:
-                    new_index = max((d.index for d in devices_list), default=-1) + 1
-                    devices_list.append(CameraDevice(new_index, desc))
-                    known_names.add(desc.casefold())
+            return [
+                CameraDevice(index, device.description())
+                for index, device in enumerate(qt_devices)
+            ]
     except Exception:
         pass
 
-    return devices_list
+    return []
 
 
 def _open_camera_capture(index, width: int, height: int, fps: int):
@@ -166,13 +156,13 @@ def _open_camera_capture(index, width: int, height: int, fps: int):
                 capture.set(cv2.CAP_PROP_BUFFERSIZE, 1)
             except Exception:
                 pass
+            capture.set(cv2.CAP_PROP_FRAME_WIDTH, req_w)
+            capture.set(cv2.CAP_PROP_FRAME_HEIGHT, req_h)
             if use_mjpg and isinstance(index, int):
                 try:
                     capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"MJPG"))
                 except Exception:
                     pass
-            capture.set(cv2.CAP_PROP_FRAME_WIDTH, req_w)
-            capture.set(cv2.CAP_PROP_FRAME_HEIGHT, req_h)
             capture.set(cv2.CAP_PROP_FPS, fps)
             for _ in range(12):
                 ok, frame = capture.read()
@@ -402,6 +392,29 @@ class CameraCapture:
                 pass
         elif self._shared_primary is not None:
             self.error = self._shared_primary.error
+        if (
+            self._shared_primary is None
+            and self.error
+            and "не открылся" in self.error
+            and isinstance(self._camera_key, int)
+        ):
+            with _ACTIVE_CAMERAS_LOCK:
+                fallback = next(
+                    (
+                        cam for key, cam in _ACTIVE_CAMERAS.items()
+                        if cam is not self
+                        and isinstance(key, int)
+                        and cam._process is not None
+                        and cam._process.is_alive()
+                        and cam._sequence is not None
+                        and int(cam._sequence.value) > 0
+                    ),
+                    None,
+                )
+            if fallback is not None:
+                w, h = self.width, self.height
+                self.stop()
+                self.start(fallback._camera_key, w, h, 30)
         if self._sequence is None or self._buffer is None:
             return -1, None
         lock=self._sequence.get_lock()
@@ -773,7 +786,11 @@ class CameraPanel(QGroupBox):
         self.toggle.clicked.connect(self.toggle_camera)
         self.status = QLabel("Готово")
         self.status.setWordWrap(True)
+        self.status.setFixedHeight(22)
+        self.status.setAlignment(Qt.AlignVCenter | Qt.AlignLeft)
         self.health_label=QLabel('Участок не оценён; зона пути не задана.'); self.health_label.setWordWrap(True)
+        self.health_label.setFixedHeight(40)
+        self.health_label.setAlignment(Qt.AlignTop | Qt.AlignLeft)
         source=QHBoxLayout(); self.source=QComboBox(); self.source.addItems(['USB-камера','Видеофайл','RTSP / поток']); source.addWidget(self.source)
         self.source_path=QLineEdit(); self.source_path.setPlaceholderText('Путь к видео или адрес потока'); source.addWidget(self.source_path)
         choose_video=QPushButton('Видео…'); choose_video.clicked.connect(self._browse_video); source.addWidget(choose_video)
@@ -1258,10 +1275,15 @@ class MainWindow(QMainWindow):
         open_final=QPushButton('События и финал'); open_final.clicked.connect(self._open_final_dashboard)
         open_route_memory=QPushButton('Карта рейсов'); open_route_memory.clicked.connect(self._open_route_memory)
         open_finale=QPushButton('Полигон / финал'); open_finale.clicked.connect(self._open_finale)
+        self.split_windows_btn = QPushButton('Камеры в 2 окнах')
+        self.split_windows_btn.clicked.connect(self._toggle_split_windows)
+        self._second_camera_window = None
+        self._cameras_layout = cameras
         toolbar = QHBoxLayout()
         toolbar.addWidget(start_all)
         toolbar.addWidget(stop_all)
         toolbar.addWidget(refresh_cameras)
+        toolbar.addWidget(self.split_windows_btn)
         toolbar.addWidget(open_simulator)
         toolbar.addWidget(open_lab)
         toolbar.addWidget(open_final)
@@ -1281,10 +1303,39 @@ class MainWindow(QMainWindow):
         self.timer.start(33)
         psutil.cpu_percent(None)
 
+    def _toggle_split_windows(self) -> None:
+        if len(self.panels) < 2:
+            return
+        panel2 = self.panels[1]
+        if self._second_camera_window is None:
+            win = QMainWindow(None)
+            win.setWindowTitle("Panoptr — Камера 2 (отдельное окно)")
+            win.resize(max(640, self.width() // 2), max(560, self.height() - 60))
+            self._cameras_layout.removeWidget(panel2)
+            win.setCentralWidget(panel2)
+            panel2.show()
+            def _on_close(ev):
+                win.takeCentralWidget()
+                self._cameras_layout.addWidget(panel2, 1)
+                panel2.show()
+                self._second_camera_window = None
+                self.split_windows_btn.setText("Камеры в 2 окнах")
+                ev.accept()
+            win.closeEvent = _on_close
+            self._second_camera_window = win
+            self.split_windows_btn.setText("Вернуть Камеру 2 в общее окно")
+            win.show()
+            win.raise_()
+        else:
+            self._second_camera_window.close()
+
     def _open_finale(self) -> None:
         from finale_ui import FinaleDialog
         if not hasattr(self,'finale_dialog'):self.finale_dialog=FinaleDialog(self)
-        self.finale_dialog.timer.start(300);self.finale_dialog.show();self.finale_dialog.raise_()
+        self.finale_dialog.timer.start(300)
+        self.finale_dialog.showNormal()
+        self.finale_dialog.raise_()
+        self.finale_dialog.activateWindow()
 
     def _start_all(self) -> None:
         selected = [panel.selected_camera_index() for panel in self.panels if panel.source.currentIndex()==0]
@@ -1393,7 +1444,10 @@ class MainWindow(QMainWindow):
             QMessageBox.information(self,'Инференс завершается','Дождитесь завершения текущего вызова модели и закройте окно снова.'); event.ignore(); return
         for panel in self.panels:
             if hasattr(panel.capture,'wait_closed'): panel.capture.wait_closed()
+        if getattr(self, '_second_camera_window', None) is not None:
+            self._second_camera_window.close()
         if getattr(self,'route_memory_window',None): self.route_memory_window.close()
+        if getattr(self,'final_dashboard',None): self.final_dashboard.close()
         self.event_store.close()
         event.accept()
 
