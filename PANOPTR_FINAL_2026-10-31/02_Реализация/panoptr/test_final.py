@@ -250,5 +250,85 @@ class Checks(unittest.TestCase):
                 while not complete and time.monotonic()<end: self.app.processEvents(); time.sleep(.01)
                 self.assertTrue(complete); self.assertEqual(complete[0][1],'CPU fallback'); self.assertEqual(model.predict.call_count,2)
         finally: scheduler.close()
+    def test_shared_camera_capture_and_ownership_transfer(self):
+        import queue
+        from main import CameraCapture,_ACTIVE_CAMERAS
+        cap1=CameraCapture(); cap2=CameraCapture()
+        fake_proc=Mock(); fake_proc.is_alive.return_value=True; fake_proc.exitcode=None
+        ctx1=Mock()
+        buf=mp.get_context('spawn').RawArray('B',4*4*3)
+        np.frombuffer(buf,dtype=np.uint8).reshape(4,4,3)[:]=77
+        seq=mp.get_context('spawn').Value('L',5)
+        last_at=mp.get_context('spawn').Value('d',time.monotonic(),lock=False)
+        fps_val=mp.get_context('spawn').Value('d',25.0,lock=False)
+        fake_queue=Mock(); fake_queue.get_nowait.side_effect=queue.Empty
+        ctx1.RawArray.return_value=buf; ctx1.Value.side_effect=[seq,last_at,fps_val]; ctx1.Event.return_value=Mock(); ctx1.Queue.return_value=fake_queue; ctx1.Process.return_value=fake_proc
+        cap1._context=ctx1
+        try:
+            cap1.start(0,4,4,30)
+            self.assertIs(_ACTIVE_CAMERAS.get(0),cap1)
+            self.assertEqual(ctx1.Process.call_count,1)
+            # Second panel starts on same camera index 0 -> attaches without spawning a second process
+            cap2.start(0,2,2,30)
+            self.assertIs(cap2._shared_primary,cap1)
+            s1,f1=cap1.latest(); s2,f2=cap2.latest()
+            self.assertEqual(s1,5); self.assertEqual(s2,5)
+            self.assertEqual(f1.shape,(4,4,3)); self.assertEqual(f2.shape,(2,2,3))
+            self.assertTrue(np.all(f2==77))
+            # Stopping cap1 transfers process ownership to cap2 without stopping the camera process
+            cap1.stop()
+            fake_proc.terminate.assert_not_called()
+            self.assertIs(_ACTIVE_CAMERAS.get(0),cap2)
+            self.assertIsNone(cap2._shared_primary)
+            seq.value=6
+            s2_next,f2_next=cap2.latest()
+            self.assertEqual(s2_next,6); self.assertEqual(f2_next.shape,(2,2,3))
+        finally:
+            cap1.stop(); cap2.stop()
+            cap1.wait_closed(); cap2.wait_closed()
+    def test_open_camera_capture_backend_and_resolution_fallback(self):
+        from main import _open_camera_capture
+        attempts=[]
+        good_frame=np.full((240,320,3),128,dtype=np.uint8)
+        class FakeCap:
+            def __init__(self,idx,backend):
+                self.idx=idx; self.backend=backend; attempts.append(backend)
+            def isOpened(self): return len(attempts)>=2
+            def set(self,*_args): return True
+            def read(self): return (True,good_frame.copy()) if len(attempts)>=2 else (False,None)
+            def release(self): pass
+        with patch('cv2.VideoCapture',side_effect=FakeCap):
+            cap,first=_open_camera_capture(0,640,480,30)
+            self.assertIsNotNone(cap); self.assertIsNotNone(first)
+            self.assertGreaterEqual(len(attempts),2)
+    def test_file_capture_looping(self):
+        from final_capture import FileCapture
+        video=self.root/'loop.avi'; writer=cv2.VideoWriter(str(video),cv2.VideoWriter_fourcc(*'MJPG'),25,(64,48))
+        writer.write(self.frame); writer.release()
+        looped=FileCapture(loop=True); looped.start(video)
+        try:
+            for expected_seq in (1,2,3):
+                looped.next_at=0.
+                seq,im=looped.latest()
+                self.assertEqual(seq,expected_seq)
+                self.assertIsNotNone(im)
+                self.assertFalse(looped.finished)
+        finally:
+            looped.stop()
+    def test_start_all_with_single_physical_camera_starts_both_panels(self):
+        from main import MainWindow,CameraDevice
+        defaults={'camera_index':0,'model':str(self.root/'local.pt'),'device':'CPU','capture_width':64,'capture_height':48,'capture_fps':15,'inference_fps':8,'image_size':320,'confidence':.2}
+        with patch('main.discover_camera_devices',return_value=[CameraDevice(0,'USB Camera'),CameraDevice(1,'OBS Virtual Camera')]):
+            window=MainWindow({'window':{'width':1280,'height':900},'cameras':[defaults,{**defaults,'camera_index':1}],'event_session':str(self.root/'session_dual')})
+        window.timer.stop()
+        try:
+            # Both panels should auto-select the physical camera 0 rather than the inactive virtual camera 1
+            self.assertEqual(window.panels[0].selected_camera_index(),0)
+            self.assertEqual(window.panels[1].selected_camera_index(),0)
+            with patch.object(window.panels[0],'toggle_camera') as t0,patch.object(window.panels[1],'toggle_camera') as t1:
+                window._start_all()
+                t0.assert_called_once(); t1.assert_called_once()
+        finally:
+            window.close()
 
 if __name__=='__main__': mp.freeze_support(); unittest.main(verbosity=2)

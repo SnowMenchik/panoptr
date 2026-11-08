@@ -99,30 +99,88 @@ class InferenceJob:
 
 def discover_camera_devices() -> list[CameraDevice]:
     """Returns user-facing camera names in the DirectShow/OpenCV index order."""
+    devices_list: list[CameraDevice] = []
     if sys.platform == "win32":
         try:
             from pygrabber.dshow_graph import FilterGraph
 
             names = FilterGraph().get_input_devices()
             if names:
-                return [CameraDevice(index, name) for index, name in enumerate(names)]
+                devices_list = [CameraDevice(index, name) for index, name in enumerate(names)]
         except Exception:
             pass
 
-    # PySide6 is also a useful fallback when DirectShow enumeration is unavailable.
+    # Merge or fall back to QtMultimedia so Media Foundation / secondary USB cameras are also visible.
     try:
         from PySide6.QtMultimedia import QMediaDevices
 
-        devices = QMediaDevices.videoInputs()
-        if devices:
-            return [
-                CameraDevice(index, device.description())
-                for index, device in enumerate(devices)
-            ]
+        qt_devices = QMediaDevices.videoInputs()
+        if qt_devices:
+            if not devices_list:
+                return [
+                    CameraDevice(index, device.description())
+                    for index, device in enumerate(qt_devices)
+                ]
+            known_names = {d.name.strip().casefold() for d in devices_list}
+            for qt_index, device in enumerate(qt_devices):
+                desc = device.description().strip()
+                if qt_index >= len(devices_list) or desc.casefold() not in known_names:
+                    new_index = max((d.index for d in devices_list), default=-1) + 1
+                    devices_list.append(CameraDevice(new_index, desc))
+                    known_names.add(desc.casefold())
     except Exception:
         pass
 
-    return []
+    return devices_list
+
+
+def _open_camera_capture(index, width: int, height: int, fps: int):
+    """Opens a camera or stream with backend, codec (MJPG/native), and resolution fallback."""
+    if sys.platform == "win32" and isinstance(index, int):
+        msmf = getattr(cv2, "CAP_MSMF", cv2.CAP_ANY)
+        candidates = [
+            (cv2.CAP_DSHOW, True),
+            (cv2.CAP_DSHOW, False),
+            (msmf, True),
+            (msmf, False),
+            (cv2.CAP_ANY, False),
+        ]
+        resolutions = [(width, height)]
+        if (width, height) != (640, 480):
+            resolutions.append((640, 480))
+        if (width, height) != (320, 240):
+            resolutions.append((320, 240))
+    else:
+        candidates = [(cv2.CAP_ANY, isinstance(index, int))]
+        if isinstance(index, int):
+            candidates.append((cv2.CAP_ANY, False))
+        resolutions = [(width, height)]
+
+    for req_w, req_h in resolutions:
+        for backend, use_mjpg in candidates:
+            capture = cv2.VideoCapture(index, backend)
+            if not capture.isOpened():
+                capture.release()
+                continue
+            try:
+                capture.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+            except Exception:
+                pass
+            if use_mjpg and isinstance(index, int):
+                try:
+                    capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"MJPG"))
+                except Exception:
+                    pass
+            capture.set(cv2.CAP_PROP_FRAME_WIDTH, req_w)
+            capture.set(cv2.CAP_PROP_FRAME_HEIGHT, req_h)
+            capture.set(cv2.CAP_PROP_FPS, fps)
+            for _ in range(12):
+                ok, frame = capture.read()
+                if ok and frame is not None and frame.size:
+                    return capture, frame
+                time.sleep(0.04)
+            capture.release()
+    return None, None
 
 
 def camera_process_main(
@@ -138,30 +196,28 @@ def camera_process_main(
     errors,
 ) -> None:
     """Owns one Windows camera and all of its driver calls in an isolated process."""
-    backend = cv2.CAP_DSHOW if sys.platform == "win32" and isinstance(index,int) else cv2.CAP_ANY
     source_label=f'Камера {index}' if isinstance(index,int) else 'Видеопоток'
     while not stop_event.is_set():
-        capture = cv2.VideoCapture(index, backend)
-        if not capture.isOpened():
+        capture, first_frame = _open_camera_capture(index, width, height, fps)
+        if capture is None:
             errors.put(f"{source_label} не открылся; повтор подключения…")
-            capture.release()
             stop_event.wait(1.0)
             continue
 
-        capture.set(cv2.CAP_PROP_BUFFERSIZE, 1)
-        capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"MJPG"))
-        capture.set(cv2.CAP_PROP_FRAME_WIDTH, width)
-        capture.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
-        capture.set(cv2.CAP_PROP_FPS, fps)
         count = 0
         failures = 0
         measured_at = time.monotonic()
+        pending_frame = first_frame
         try:
             while not stop_event.is_set():
-                ok, frame = capture.read()
+                if pending_frame is not None:
+                    ok, frame = True, pending_frame
+                    pending_frame = None
+                else:
+                    ok, frame = capture.read()
                 if not ok or frame is None or not frame.size:
                     failures += 1
-                    if failures >= 5:
+                    if failures >= 15:
                         errors.put(f"{source_label}: потерян поток; переподключение…")
                         break
                     stop_event.wait(0.05)
@@ -186,8 +242,12 @@ def camera_process_main(
             stop_event.wait(0.5)
 
 
+_ACTIVE_CAMERAS_LOCK = threading.Lock()
+_ACTIVE_CAMERAS: dict[object, "CameraCapture"] = {}
+
+
 class CameraCapture:
-    """Reads the newest frame from a dedicated per-camera child process."""
+    """Reads the newest frame from a dedicated per-camera child process (or shares an already-open camera across panels)."""
 
     def __init__(self) -> None:
         self._context = mp.get_context("spawn")
@@ -205,16 +265,45 @@ class CameraCapture:
         self.started_at = 0.0
         self.width = 0
         self.height = 0
+        self._buffer_width = 0
+        self._buffer_height = 0
         self._cleanup_threads=[]
+        self._camera_key = None
+        self._shared_primary: CameraCapture | None = None
+        self._subscribers: set[CameraCapture] = set()
 
     def start(self, index: int, width: int, height: int, fps: int) -> None:
         self.stop()
         self.width, self.height = width, height
+        self._buffer_width, self._buffer_height = width, height
         self.started_at = time.monotonic()
         self.error = None
         self._cached_sequence = -1
         self._cached_frame = None
         self.captured_at = 0.
+        self._camera_key = index
+        with _ACTIVE_CAMERAS_LOCK:
+            primary = _ACTIVE_CAMERAS.get(index)
+            if (
+                primary is not None
+                and primary is not self
+                and primary._process is not None
+                and primary._process.is_alive()
+                and primary._buffer is not None
+                and primary._sequence is not None
+            ):
+                self._shared_primary = primary
+                primary._subscribers.add(self)
+                self._buffer = primary._buffer
+                self._sequence = primary._sequence
+                self._last_frame_at = primary._last_frame_at
+                self._actual_fps = primary._actual_fps
+                self._buffer_width = primary._buffer_width or primary.width
+                self._buffer_height = primary._buffer_height or primary.height
+                return
+            self._shared_primary = None
+            self._subscribers = {self}
+            _ACTIVE_CAMERAS[index] = self
         self._buffer = self._context.RawArray("B", width * height * 3)
         self._sequence = self._context.Value("L", 0)
         self._last_frame_at = self._context.Value("d", self.started_at, lock=False)
@@ -241,6 +330,41 @@ class CameraCapture:
         self._process.start()
 
     def stop(self) -> None:
+        with _ACTIVE_CAMERAS_LOCK:
+            if self._shared_primary is not None:
+                self._shared_primary._subscribers.discard(self)
+                self._shared_primary = None
+                self._camera_key = None
+                self._process = None; self._errors = None; self._buffer = None; self._sequence = None; self._last_frame_at = None; self._actual_fps = None
+                self._cached_frame = None; self._cached_sequence = -1; self.captured_at = 0.
+                return
+            other_subscribers = [sub for sub in self._subscribers if sub is not self]
+            if other_subscribers and self._process is not None:
+                new_primary = other_subscribers[0]
+                new_primary._shared_primary = None
+                new_primary._process = self._process
+                new_primary._stop_event = self._stop_event
+                new_primary._buffer = self._buffer
+                new_primary._sequence = self._sequence
+                new_primary._last_frame_at = self._last_frame_at
+                new_primary._actual_fps = self._actual_fps
+                new_primary._errors = self._errors
+                new_primary._buffer_width = self._buffer_width or self.width
+                new_primary._buffer_height = self._buffer_height or self.height
+                new_primary._subscribers = set(other_subscribers)
+                for sub in other_subscribers[1:]:
+                    sub._shared_primary = new_primary
+                if self._camera_key is not None:
+                    _ACTIVE_CAMERAS[self._camera_key] = new_primary
+                self._subscribers = set()
+                self._camera_key = None
+                self._process = None; self._stop_event = None; self._errors = None; self._buffer = None; self._sequence = None; self._last_frame_at = None; self._actual_fps = None
+                self._cached_frame = None; self._cached_sequence = -1; self.captured_at = 0.
+                return
+            if self._camera_key is not None and _ACTIVE_CAMERAS.get(self._camera_key) is self:
+                _ACTIVE_CAMERAS.pop(self._camera_key, None)
+            self._subscribers = set()
+            self._camera_key = None
         if self._stop_event is not None:
             self._stop_event.set()
         process,errors=self._process,self._errors
@@ -276,6 +400,8 @@ class CameraCapture:
                     self.error = self._errors.get_nowait()
             except queue.Empty:
                 pass
+        elif self._shared_primary is not None:
+            self.error = self._shared_primary.error
         if self._sequence is None or self._buffer is None:
             return -1, None
         lock=self._sequence.get_lock()
@@ -286,15 +412,21 @@ class CameraCapture:
         try:
             sequence = int(self._sequence.value)
             if sequence and sequence != self._cached_sequence:
-                self._cached_frame=np.frombuffer(self._buffer,dtype=np.uint8).reshape(self.height,self.width,3).copy()
+                buf_w = self._buffer_width or self.width
+                buf_h = self._buffer_height or self.height
+                raw_frame = np.frombuffer(self._buffer, dtype=np.uint8).reshape(buf_h, buf_w, 3).copy()
+                if (buf_w, buf_h) != (self.width, self.height) and self.width > 0 and self.height > 0:
+                    raw_frame = cv2.resize(raw_frame, (self.width, self.height), interpolation=cv2.INTER_AREA)
+                self._cached_frame = raw_frame
                 self.captured_at=float(self._last_frame_at.value); self._cached_sequence=sequence; self.error=None
         finally: lock.release()
+        proc = self._process or (self._shared_primary._process if self._shared_primary is not None else None)
         if (
-            self._process is not None
-            and not self._process.is_alive()
-            and self._process.exitcode not in (None, 0)
+            proc is not None
+            and not proc.is_alive()
+            and proc.exitcode not in (None, 0)
         ):
-            self.error = f"Процесс камеры завершился с кодом {self._process.exitcode}"
+            self.error = f"Процесс камеры завершился с кодом {proc.exitcode}"
         return sequence, self._cached_frame
 
     def frame_age(self) -> float:
@@ -338,6 +470,10 @@ class InferenceScheduler:
             self._generations[channel]=generation
             self._pending[channel] = InferenceJob(channel,sequence,generation,captured_at if captured_at is not None else time.monotonic(),frame.copy(),options)
             self._condition.notify()
+
+    def has_pending(self, channel: int) -> bool:
+        with self._condition:
+            return channel in self._pending
 
     def invalidate(self,channel,generation):
         with self._condition:
@@ -384,7 +520,16 @@ class InferenceScheduler:
         with gpu_guard(device):
             loaded_at=time.perf_counter()
             model=self._get_model(job.channel,job.options.model,device)
-            self._last_load_ms=(time.perf_counter()-loaded_at)*1000; started=time.perf_counter()
+            self._last_load_ms=(time.perf_counter()-loaded_at)*1000
+            if self._last_load_ms > 50.0:
+                with self._condition:
+                    newer = self._pending.get(job.channel)
+                    if newer is not None and newer.generation == job.generation and newer.options == job.options:
+                        self._pending.pop(job.channel, None)
+                        job.sequence = newer.sequence
+                        job.captured_at = newer.captured_at
+                        job.frame = newer.frame
+            started=time.perf_counter()
             result=model.predict(source=job.frame,imgsz=job.options.image_size,conf=job.options.confidence,
                 device=device,quantize=16 if use_half else None,verbose=False)[0]
             self._last_predict_ms=(time.perf_counter()-started)*1000; return result
@@ -787,7 +932,7 @@ class CameraPanel(QGroupBox):
         self.capture.stop()
         if self.source.currentIndex()==1:
             from final_capture import FileCapture
-            self.capture=FileCapture(); camera_index=self.source_path.text(); self.source_kind='file'
+            self.capture=FileCapture(loop=True); camera_index=self.source_path.text(); self.source_kind='file'
         else:
             self.capture=CameraCapture(); self.source_kind='stream' if self.source.currentIndex()==2 else 'camera'
             if self.source_kind=='stream': camera_index=self.source_path.text().strip()
@@ -919,7 +1064,8 @@ class CameraPanel(QGroupBox):
 
         sequence, frame = self.capture.latest()
         now = time.monotonic()
-        if self.capture.frame_age() > 3.0 and now - self.last_capture_restart > 4.0 and self.source_kind!='file':
+        watchdog_limit = 8.0 if sequence <= 0 else 3.5
+        if self.capture.frame_age() > watchdog_limit and now - self.last_capture_restart > 4.5 and self.source_kind!='file':
             camera_index = self.source_path.text().strip() if self.source_kind=='stream' else self.selected_camera_index()
             if camera_index is not None:
                 self.capture_restart_count += 1
@@ -971,10 +1117,12 @@ class CameraPanel(QGroupBox):
         if self.capture_health and not self.capture_health['assessed']: self.health_label.setText('Участок не оценён: текущий кадр источника — '+', '.join(self.capture_health['reasons']))
 
         interval = 1.0 / self.inference_fps.value()
-        if sequence != self.last_submitted_sequence and now - self.last_submit_time >= interval:
+        has_pending = self.scheduler.has_pending(self.channel)
+        if sequence != self.last_submitted_sequence and (has_pending or now - self.last_submit_time >= interval):
             self.scheduler.submit(self.channel, sequence, frame, self.options(),self.generation,self.capture.captured_at)
             self.last_submitted_sequence = sequence
-            self.last_submit_time = now
+            if not has_pending:
+                self.last_submit_time = now
 
     def set_result(self, packet: DetectionPacket, elapsed_ms: float, device: str) -> None:
         now=time.monotonic()
@@ -1074,6 +1222,8 @@ class MainWindow(QMainWindow):
             camera_defaults = dict(camera)
             if index < len(physical_devices):
                 camera_defaults["camera_index"] = physical_devices[index].index
+            elif physical_devices:
+                camera_defaults["camera_index"] = physical_devices[0].index
             panel_configs.append(camera_defaults)
         self.panels = [
             CameraPanel(index, camera, self.scheduler, self.camera_devices)
@@ -1141,13 +1291,6 @@ class MainWindow(QMainWindow):
         if None in selected:
             QMessageBox.warning(self, "Камеры", "Подключённые камеры не найдены.")
             return
-        if len(selected)==2 and selected[0] == selected[1]:
-            QMessageBox.warning(
-                self,
-                "Камеры",
-                "Для двух панелей выбрана одна и та же камера. Выберите разные устройства.",
-            )
-            return
         for panel in self.panels:
             if not panel.running:
                 panel.toggle_camera()
@@ -1162,8 +1305,14 @@ class MainWindow(QMainWindow):
             return
         devices = discover_camera_devices()
         self.camera_devices = devices
-        for panel in self.panels:
-            panel.set_camera_devices(devices)
+        physical_devices = [device for device in devices if not device.is_virtual]
+        for index, panel in enumerate(self.panels):
+            preferred = (
+                physical_devices[index].index
+                if index < len(physical_devices)
+                else (physical_devices[0].index if physical_devices else panel.selected_camera_index())
+            )
+            panel.set_camera_devices(devices, preferred)
         if not devices:
             QMessageBox.warning(
                 self,

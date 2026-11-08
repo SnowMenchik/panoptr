@@ -10,7 +10,8 @@ from path_geometry import object_context,serializable_geometry
 class TrackingBackend:
     def __init__(self,mode='iou',gap_s=1.,fps=20,min_iou=.2):
         if mode not in ('iou','bytetrack') or not np.isfinite([gap_s,fps,min_iou]).all() or gap_s<=0 or fps<=0 or not 0<=min_iou<=1: raise ValueError('Неверный режим сопровождения.')
-        self.mode=mode; self.gap_s=gap_s; self.fps=fps; self.min_iou=min_iou; self.streams={}; self.count=0; self.lost_episodes=0; self.refound_episodes=0
+        import itertools
+        self.mode=mode; self.gap_s=gap_s; self.fps=fps; self.min_iou=min_iou; self.streams={}; self.count=0; self._byte_ids=itertools.count(1); self.lost_episodes=0; self.refound_episodes=0
     def reset(self,channel=None):
         if channel is None: self.streams={}
         else: self.streams={k:v for k,v in self.streams.items() if k[0]!=channel}
@@ -39,9 +40,11 @@ class TrackingBackend:
             from ultralytics.engine.results import Boxes
             # Upstream constructors reset a global ID counter. Prevent collisions
             # when another class/channel creates its own tracker.
+            shared_ids = self._byte_ids
             class ScopedBYTE(BYTETracker):
-                @staticmethod
-                def reset_id(): pass
+                def reset_id(self=None):
+                    if self is not None:
+                        self._ids = shared_ids
             classes=set(state['byte'])|{int(rows[i,5]) for i in valid}
             for cls in classes:
                 if cls not in state['byte']:

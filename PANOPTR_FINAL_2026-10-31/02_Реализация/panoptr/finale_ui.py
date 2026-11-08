@@ -31,16 +31,36 @@ class FinaleDialog(QDialog):
         self.site.currentIndexChanged.connect(lambda:self.gauge.setEnabled(self.site.currentData()=='model'))
         self.source_kind=QComboBox();self.source_kind.addItem('Локальная видеозапись','file');self.source_kind.addItem('Подключённая камера','camera');form.addRow('Источник',self.source_kind)
         self.file=QLineEdit();form.addRow('Видео',self.file);self.button(layout,'Выбрать видео',self.choose_video)
+        self.task.currentIndexChanged.connect(self._sync_default_video)
+        self._sync_default_video()
         self.device=QComboBox();self.device.addItems(['CPU','GPU','Auto']);form.addRow('Обработка',self.device)
         self.size=QComboBox();self.size.addItems(['320','416','512','640','960','1024','1280','1536']);self.size.setCurrentText('640');form.addRow('Размер входа модели',self.size)
         self.conf=QDoubleSpinBox();self.conf.setRange(.05,.95);self.conf.setValue(.25);self.conf.setSingleStep(.05);form.addRow('Порог модели',self.conf)
-        row=QHBoxLayout();layout.addLayout(row);self.button(row,'1. Применить профиль',self.apply_profile);self.button(row,'2. Запустить канал',self.start_channel);self.button(row,'Остановить канал',self.stop_channel)
+        row=QHBoxLayout();layout.addLayout(row);self.button(row,'1. Применить профиль',self.apply_profile);self.button(row,'2. Запустить канал',self.start_channel);self.button(row,'Запустить оба канала',self.start_both_channels);self.button(row,'Остановить канал',self.stop_channel)
         self.profile_note=QLabel('Для USB-камеры выберите устройство в основном окне. Для другого ракурса заново задайте зону и проверочную калибровку. Запись или макет не доказывают работу на ВСМ.');self.profile_note.setWordWrap(True);layout.addWidget(self.profile_note)
         row=QHBoxLayout();layout.addLayout(row);self.button(row,'3. Карточки и доказательства',self.window._open_final_dashboard);self.button(row,'Карта и следующий рейс',self.window._open_route_memory);self.button(row,'Лаборатория данных',self.window._open_dataset_lab)
         self.button(layout,'Проверить локальные веса и зависимости',self.check_ready);self.ready=QPlainTextEdit();self.ready.setReadOnly(True);layout.addWidget(self.ready)
         self.tabs.addTab(page,'1. Сквозной показ')
+    def _examples_dir(self):
+        for candidate in [self.root.parents[1]/'examples',self.root/'examples']:
+            if candidate.is_dir():return candidate
+        return self.root
+    def _default_video_for_task(self,task_key):
+        ex=self._examples_dir()
+        preferred='drone.avi' if task_key=='drone' else 'rail.avi'
+        for name in [preferred,'rail.avi','drone.avi']:
+            p=ex/name
+            if p.is_file():return str(p.resolve())
+        return ''
+    def _sync_default_video(self):
+        current=self.file.text().strip()
+        ex=self._examples_dir()
+        if not current or Path(current).parent==ex:
+            default_vid=self._default_video_for_task(self.task.currentData())
+            if default_vid:self.file.setText(default_vid)
     def choose_video(self):
-        p=QFileDialog.getOpenFileName(self,'Локальное видео','','Видео (*.avi *.mp4 *.mkv *.mov)')[0]
+        start_dir=str(Path(self.file.text()).parent) if self.file.text().strip() and Path(self.file.text()).parent.is_dir() else str(self._examples_dir())
+        p=QFileDialog.getOpenFileName(self,'Локальное видео',start_dir,'Видео (*.avi *.mp4 *.mkv *.mov)')[0]
         if p:self.file.setText(p)
     def site_profile(self):return profile(self.site.currentData(),self.gauge.value() if self.site.currentData()=='model' else None)
     def fingerprint(self):
@@ -59,10 +79,32 @@ class FinaleDialog(QDialog):
         if self.series:self.series.action('configuration_changed','Применён новый профиль '+cfg['task'])
         write(self.window.event_store.root/f'channel_{p.channel}_finale_profile.json',cfg);self.profile_note.setText(cfg['profile']['title']+f" · колея {cfg['profile']['gauge_mm']:g} мм. Калибровка не применена; расстояния неизвестны. Перед новой серией удалите объект и дождитесь окончания старого сопровождения.");self.state.setText('Профиль готов. Запустите канал, затем создайте серию испытаний.')
     def start_channel(self):
-        if not self.current_config:raise ValueError('Сначала примените профиль.')
+        if not self.current_config:self.apply_profile()
         if self.series:self.series.action('start_channel','Запуск канала испытателем')
         if not self.panel().running:self.panel().toggle_camera()
         self.last_running=self.panel().running
+    def start_both_channels(self):
+        if self.series and self.series.active:raise ValueError('Завершите опыт перед перезапуском обоих каналов.')
+        saved_channel=self.channel.currentIndex()
+        primary_task=self.task.currentData()
+        secondary_task='drone' if primary_task!='drone' else 'rail'
+        kind=self.source_kind.currentData()
+        for ch_idx,t_key in [(0,primary_task),(1,secondary_task)]:
+            p=self.window.panels[ch_idx]
+            src=self.file.text().strip() if kind=='file' and ch_idx==saved_channel else (self._default_video_for_task(t_key) or self.file.text().strip()) if kind=='file' else p.selected_camera_index()
+            cfg=configuration(self.root,t_key,self.site_profile(),kind,src,self.device.currentText(),int(self.size.currentText()),self.conf.value())
+            if p.running:p.stop()
+            p.source.setCurrentIndex(1 if kind=='file' else 0)
+            if kind=='file':p.source_path.setText(str(Path(src).resolve()))
+            p.model_preset.setCurrentIndex(max(0,p.model_preset.findText('Пользовательская')));p.model_path.setText(cfg['model']);p.device.setCurrentIndex(p.device.findData(cfg['device']));p.image_size.setCurrentText(str(cfg['image_size']));p.confidence.setValue(cfg['confidence']);p.inference_fps.setValue(4)
+            p.policy.update(zone=[],speed_kmh=0.,visible_length_m=0.,geometry_calibration_file='');p._inference_settings_changed()
+            write(self.window.event_store.root/f'channel_{p.channel}_finale_profile.json',cfg)
+            if ch_idx==saved_channel:
+                self.current_config=cfg;self.truth_class.setText(TASKS[t_key]['classes'][0])
+        for p in self.window.panels:
+            if not p.running:p.toggle_camera()
+        self.last_signature=self.fingerprint();self.last_running=self.panel().running
+        self.state.setText('Оба канала (Канал 1 и Канал 2) запущены одновременно.')
     def stop_channel(self):
         if self.series:self.series.action('stop_channel','Остановка канала испытателем')
         if self.panel().running:self.panel().stop()
