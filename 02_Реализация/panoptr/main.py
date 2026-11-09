@@ -714,7 +714,7 @@ class CameraPanel(QGroupBox):
         self.video = QLabel("Камера остановлена")
         self.video.setAlignment(Qt.AlignCenter)
         self.video.setMinimumSize(480, 300)
-        self.video.setStyleSheet("background:#111; color:#aaa; border:1px solid #333")
+        self.video.setStyleSheet("background:#0F172A; color:#E2E8F0; border:2px solid #305BA7; border-radius:6px; font-weight:600;")
 
         self.camera_selector = QComboBox()
         self.set_camera_devices(camera_devices, defaults["camera_index"])
@@ -1299,11 +1299,14 @@ class MainWindow(QMainWindow):
         toolbar.addStretch(1)
         toolbar.addWidget(self.resources)
 
+        from ui_theme import apply_competition_theme, create_competition_banner
         central = QWidget()
         layout = QVBoxLayout(central)
+        layout.addWidget(create_competition_banner('PANOPTR — ИИ НА СКОРОСТИ', 'Двухканальный видеоконтроль пути, токосъёма и габарита ВСМ • Фиксация доказательств и память маршрута'))
         layout.addLayout(toolbar)
         layout.addLayout(cameras, 1)
         self.setCentralWidget(central)
+        apply_competition_theme(self)
 
         self.timer = QTimer(self)
         self.timer.timeout.connect(self._tick)

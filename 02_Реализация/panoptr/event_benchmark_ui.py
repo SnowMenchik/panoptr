@@ -52,10 +52,13 @@ class EventBenchmarkDialog(QDialog):
         self.project=None; self.path=None; self.cap=None; self.process=QProcess(self); self.process.setProcessChannelMode(QProcess.MergedChannels)
         self.process.readyReadStandardOutput.connect(self.read_log); self.process.finished.connect(self.done_process)
         self.process.errorOccurred.connect(lambda *_:self.log.appendPlainText(self.process.errorString()))
-        layout=QVBoxLayout(self); self.tabs=QTabWidget(); layout.addWidget(self.tabs); self.build_editor(); self.build_tools()
+        from ui_theme import create_competition_banner
+        layout=QVBoxLayout(self); layout.addWidget(create_competition_banner('НЕЗАВИСИМАЯ РАЗМЕТКА И ОЦЕНКА СОБЫТИЙ ВСМ', 'Ручной эталон GT по кадрам • Заморозка SHA-256 • Независимый расчёт Recall и FP/мин')); self.tabs=QTabWidget(); layout.addWidget(self.tabs); self.build_editor(); self.build_tools()
         self.status=QLabel('Начните с локального видео. Разметка модели и решение оператора не являются независимым GT.'); self.status.setWordWrap(True); layout.addWidget(self.status)
         self.log=QPlainTextEdit(); self.log.setReadOnly(True); self.log.setMaximumHeight(100); layout.addWidget(self.log)
         b=QPushButton('Остановить только инструмент оценки'); b.clicked.connect(self.process.terminate); layout.addWidget(b)
+        from ui_theme import apply_competition_theme
+        apply_competition_theme(self)
     def safe(self,fn):
         try: return fn()
         except Exception as exc: QMessageBox.warning(self,'Оценка событий',str(exc))

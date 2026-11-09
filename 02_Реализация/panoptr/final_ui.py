@@ -17,7 +17,8 @@ class FinalDashboard(QDialog):
     def __init__(self,panels,store,parent=None):
         super().__init__(None); self.setWindowFlags(Qt.Window | Qt.WindowSystemMenuHint | Qt.WindowMinMaxButtonsHint | Qt.WindowCloseButtonHint); self.panels=panels; self.store=store; self.view_store=store; self.setWindowTitle('Panoptr — события и подготовка финала'); self.resize(1180,850)
         self.process=QProcess(self); self.process.setProcessChannelMode(QProcess.MergedChannels); self.process.readyReadStandardOutput.connect(self.read_log); self.process.finished.connect(self.process_finished)
-        self.process.errorOccurred.connect(self.process_error); self.busy=[]; self.rows=[]; layout=QVBoxLayout(self); self.tabs=QTabWidget(); layout.addWidget(self.tabs)
+        self.process.errorOccurred.connect(self.process_error); from ui_theme import apply_competition_theme, create_competition_banner
+        self.busy=[]; self.rows=[]; layout=QVBoxLayout(self); layout.addWidget(create_competition_banner('СОБЫТИЯ, ДОКАЗАТЕЛЬСТВА И ПОДГОТОВКА ФИНАЛА', 'Журнал карточек оператора • Репетиция отказов • Инженерные инструменты ВСМ')); self.tabs=QTabWidget(); layout.addWidget(self.tabs)
         self.build_events(); self.build_rehearsal(); self.build_review(); self.build_readiness(); self.build_compare()
         self.button(layout,'Разметка и независимая оценка событий',self.open_event_benchmark)
         self.button(layout,'Инженерный расчёт камеры и покрытия',self.open_camera_design)
@@ -27,7 +28,7 @@ class FinalDashboard(QDialog):
         self.log=QPlainTextEdit(); self.log.setReadOnly(True); self.log.setMaximumHeight(100); layout.addWidget(self.log)
         self.state=QLabel('Инструменты не запускают обучение. Репетиция использует CPU.'); self.state.setWordWrap(True); layout.addWidget(self.state)
         stop=QPushButton('Остановить инструмент'); stop.clicked.connect(self.process.terminate); layout.addWidget(stop)
-        self.timer=QTimer(self); self.timer.timeout.connect(self.refresh_events); self.timer.start(1000)
+        apply_competition_theme(self); self.timer=QTimer(self); self.timer.timeout.connect(self.refresh_events); self.timer.start(1000)
     def open_rail_reference(self):
         from rail_reference_ui import RailReferenceDialog
         dialog=RailReferenceDialog(self.view_store,self.selected(),self);dialog.exec();self.refresh_events();self.show_event()

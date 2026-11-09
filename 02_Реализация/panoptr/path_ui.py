@@ -34,7 +34,8 @@ class PathUnderstandingDialog(QDialog):
         super().__init__(parent); self.panels=panels or []; self.route=RouteState(); self.frame,self.raw=demo_geometry(); self.image_path=None; self.calibration=None; self.geometry=None
         self.setWindowTitle('Panoptr — понимание пути, балласт и сопровождение'); self.resize(1320,900)
         self.process=QProcess(self); self.process.setProcessChannelMode(QProcess.MergedChannels); self.process.readyReadStandardOutput.connect(self.read_log); self.process.finished.connect(self.finished); self.process.errorOccurred.connect(self.process_error)
-        outer=QVBoxLayout(self); label=QLabel('Коридор — по видимым рельсам; стрелка требует выбора. Эвристический показатель не является вероятностью безопасности. CPU; обучение не запускается.'); label.setWordWrap(True); outer.addWidget(label)
+        from ui_theme import create_competition_banner, apply_competition_theme
+        outer=QVBoxLayout(self); outer.addWidget(create_competition_banner('ПОНИМАНИЕ ПУТИ, БАЛЛАСТ И СОПРОВОЖДЕНИЕ ВСМ', 'Сегментация рельсов и балласта • Стрелочные переводы • Сравнение IoU и ByteTrack')); label=QLabel('Коридор — по видимым рельсам; стрелка требует выбора. Эвристический показатель не является вероятностью безопасности. CPU; обучение не запускается.'); label.setWordWrap(True); outer.addWidget(label)
         tabs=QTabWidget(); outer.addWidget(tabs); page=QWidget(); layout=QHBoxLayout(page); left=QVBoxLayout(); layout.addLayout(left,3)
         self.geometry_status=QLabel(); self.geometry_status.setWordWrap(True); left.addWidget(self.geometry_status)
         self.preview=QLabel(); self.preview.setAlignment(Qt.AlignCenter); self.preview.setMinimumSize(640,400); self.preview.setStyleSheet('background:#142331'); left.addWidget(self.preview,1)

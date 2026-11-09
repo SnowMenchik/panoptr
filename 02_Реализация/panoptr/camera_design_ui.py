@@ -13,7 +13,7 @@ ROOT=Path(__file__).resolve().parent; WORK=ROOT.parents[1]/'13_Расчёт_ка
 class ProjectionCanvas(QWidget):
     def __init__(self): super().__init__(); self.report=None; self.setMinimumSize(360,220)
     def paintEvent(self,event):
-        painter=QPainter(self); painter.fillRect(QRectF(0,0,self.width(),self.height()),QColor('#172536'))
+        painter=QPainter(self); painter.fillRect(QRectF(0,0,self.width(),self.height()),QColor('#0F1E36'))
         if not self.report: return
         p=self.report['inputs']; target=self.report['target']; w,h=p['width_px'],p['height_px']
         scale=min((self.width()-40)/w,(self.height()-45)/h); ox=(self.width()-w*scale)/2; oy=25
@@ -54,7 +54,8 @@ class CameraDesignDialog(QDialog):
     def __init__(self,parent=None):
         super().__init__(parent); self.setWindowTitle('Panoptr — инженерный расчёт камеры'); self.resize(1260,920)
         self.profiles={'near':preset('near'),'forward':preset('forward')}; self.active='near'; self.report=None
-        layout=QVBoxLayout(self); row=QHBoxLayout(); layout.addLayout(row)
+        from ui_theme import apply_competition_theme, create_competition_banner
+        layout=QVBoxLayout(self); layout.addWidget(create_competition_banner('ИНЖЕНЕРНЫЙ РАСЧЁТ КАМЕРЫ И ПОКРЫТИЯ ВСМ', 'Расчёт смаза при 400 км/ч, выдержки, разрешения и числа наблюдений в зоне видимости')); row=QHBoxLayout(); layout.addLayout(row)
         self.scenario=QComboBox(); self.scenario.addItem('Детали пути вблизи: плоский дефект','near'); self.scenario.addItem('Препятствия впереди: вертикальный объект','forward'); row.addWidget(self.scenario,1)
         self.button(row,'Исходный пример',self.reset); self.button(row,'Загрузить параметры',self.load_inputs); self.button(row,'Сохранить параметры',self.save_inputs)
         split=QSplitter(); layout.addWidget(split,1); scroll=QScrollArea(); scroll.setWidgetResizable(True); inputs=QWidget(); form=QFormLayout(inputs); scroll.setWidget(inputs); split.addWidget(scroll)
@@ -75,6 +76,7 @@ class CameraDesignDialog(QDialog):
         self.notes=QLabel(); self.notes.setWordWrap(True); right.addWidget(self.notes)
         row=QHBoxLayout(); layout.addLayout(row); self.button(row,'Рассчитать',self.recalculate); self.button(row,'Экспорт отчёта и графика',self.export)
         info=QLabel('Пороги — ваши проектные цели, не норматив ВСМ и не гарантия Recall. Идеальная pinhole-геометрия, неподвижный объект, равномерное движение. Увеличение изображения не восстанавливает детали. Параметры не применяются к работающим камерам или обучению.'); info.setWordWrap(True); layout.addWidget(info)
+        apply_competition_theme(self)
         self.scenario.currentIndexChanged.connect(self.switch); self.fill(self.profiles['near']); self.recalculate()
     def safe(self,fn):
         try: return fn()

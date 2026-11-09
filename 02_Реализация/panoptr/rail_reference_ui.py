@@ -5,7 +5,8 @@ from rail_reference import catalogue,advice,valid_codes
 class RailReferenceDialog(QDialog):
     def __init__(self,store=None,event=None,parent=None):
         super().__init__(parent);self.store=store;self.event_record=event;self.setWindowTitle('Panoptr — визуальный признак и справочник рельсов');self.resize(1050,800)
-        outer=QVBoxLayout(self);info=QLabel('№ 2499р, предоставленная редакция 13.11.2024. Класс модели и confidence не устанавливают нормативный код, ДР/ОДР или допустимую скорость.');info.setWordWrap(True);outer.addWidget(info)
+        from ui_theme import create_competition_banner
+        outer=QVBoxLayout(self);outer.addWidget(create_competition_banner('СПРАВОЧНИК ДЕФЕКТОВ РЕЛЬСОВ И ЗАПИСЬ ОБСЛЕДОВАНИЯ', 'Классификатор ОАО «РЖД» № 2499р • Разделение визуального признака ИИ и заключения дефектоскописта'));info=QLabel('№ 2499р, предоставленная редакция 13.11.2024. Класс модели и confidence не устанавливают нормативный код, ДР/ОДР или допустимую скорость.');info.setWordWrap(True);outer.addWidget(info)
         self.tabs=QTabWidget();outer.addWidget(self.tabs);page=QWidget();layout=QVBoxLayout(page)
         self.query=QLineEdit();self.query.setPlaceholderText('Найти код или способ обследования');layout.addWidget(self.query)
         self.entries=QListWidget();layout.addWidget(self.entries);self.methods=QPlainTextEdit();self.methods.setReadOnly(True);layout.addWidget(self.methods)
@@ -19,6 +20,8 @@ class RailReferenceDialog(QDialog):
         self.save_button=QPushButton('Сохранить отдельную запись обследования');self.save_button.setEnabled(store is not None and event is not None);self.save_button.clicked.connect(self.save);layout.addWidget(self.save_button)
         layout.addWidget(QLabel('Это не автоматическое заключение. Решение оператора по карточке и запись нормативного обследования хранятся отдельно.'))
         self.tabs.addTab(page,'Запись к событию')
+        from ui_theme import apply_competition_theme
+        apply_competition_theme(self)
         if event:
             values=event.get('technical_review',{});self.status.setCurrentIndex(max(0,self.status.findData(values.get('status','visual_only'))));self.code.setCurrentIndex(max(0,self.code.findData(values.get('code') or '')));self.reviewer.setText(values.get('reviewer',''));self.method.setText(values.get('method',''));self.note.setPlainText(values.get('note',''));self.tabs.setCurrentIndex(1)
     def filter(self):

@@ -154,7 +154,7 @@ class MainWindow(QMainWindow):
         self.preview = QLabel("Предпросмотр появится после запуска")
         self.preview.setAlignment(Qt.AlignCenter)
         self.preview.setMinimumSize(640, 360)
-        self.preview.setStyleSheet("background:#111;color:#aaa")
+        self.preview.setStyleSheet("background:#0F172A;color:#E2E8F0;border:2px solid #305BA7;border-radius:6px;font-weight:600;")
         self.table = QTableWidget(0, 2)
         self.table.setHorizontalHeaderLabels(["Показатель", "Значение"])
         self.table.horizontalHeader().setStretchLastSection(True)
@@ -176,7 +176,9 @@ class MainWindow(QMainWindow):
         controls.addWidget(self.status)
 
         central = QWidget()
+        from ui_theme import create_competition_banner
         layout = QVBoxLayout(central)
+        layout.addWidget(create_competition_banner('СИМУЛЯТОР УСЛОВИЙ ВСМ ДО 400 КМ/Ч', 'Смаз движения • Вибрация • Осадки • Потеря GNSS и перегрузка CPU/GPU'))
         layout.addWidget(files)
         layout.addLayout(settings)
         layout.addLayout(controls)

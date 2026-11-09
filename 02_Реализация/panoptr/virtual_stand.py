@@ -20,7 +20,7 @@ class StandCanvas(QWidget):
     def __init__(self,parent=None):
         super().__init__(parent); self.setMinimumSize(550,440); self.azimuth=35.; self.elevation=25.; self.distance=8.; self.target=np.array([0.,0.,.9]); self.meshes=[]; self.last=None; self.brightness=1.; self.caption=''
     def paintEvent(self,event):
-        p=QPainter(self); p.setRenderHint(QPainter.Antialiasing); p.fillRect(self.rect(),QColor('#111e29'))
+        p=QPainter(self); p.setRenderHint(QPainter.Antialiasing); p.fillRect(self.rect(),QColor('#0F1E36'))
         a,e=math.radians(self.azimuth),math.radians(self.elevation)
         eye=self.target+self.distance*np.array([math.cos(e)*math.sin(a),math.cos(e)*math.cos(a),math.sin(e)])
         # Limit raster resolution on large screens; display resampling never claims sensor pixels.
@@ -89,7 +89,8 @@ class VirtualStandDialog(QDialog):
     def __init__(self,parent=None):
         super().__init__(parent); self.setWindowTitle('Panoptr — виртуальный 3D-стенд'); self.resize(1360,890)
         self.bench=SyntheticBench(); self.t=0.; self.generation=1; self.running=False; self.store=None; self.saved={}; self.rows=[]; self.position=1.8
-        layout=QVBoxLayout(self); warning=QLabel('Виртуальный стенд: метки из геометрии сцены, без YOLO и GPU. Проверяет сценарии/журнал; не доказывает работу оборудования при400км/ч.'); warning.setWordWrap(True); layout.addWidget(warning)
+        from ui_theme import apply_competition_theme, create_competition_banner
+        layout=QVBoxLayout(self); layout.addWidget(create_competition_banner('ВИРТУАЛЬНЫЙ 3D-СТЕНД И КОМПОНОВКА ВСМ', 'Трёхмерная модель оптического модуля Д16Т • Расчёт потока 185 185 строк/с и теплового баланса')); warning=QLabel('Виртуальный стенд: метки из геометрии сцены, без YOLO и GPU. Проверяет сценарии/журнал; не доказывает работу оборудования при400км/ч.'); warning.setWordWrap(True); layout.addWidget(warning)
         self.tabs=QTabWidget(); layout.addWidget(self.tabs); page=QWidget(); row=QHBoxLayout(page); self.canvas=StandCanvas(); row.addWidget(self.canvas,3)
         panel=QWidget(); controls=QVBoxLayout(panel); form=QFormLayout(); controls.addLayout(form)
         self.mode=QComboBox(); self.mode.addItems(['Лабораторная компоновка','Установка на условной платформе']); form.addRow('Компоновка',self.mode)
@@ -100,7 +101,7 @@ class VirtualStandDialog(QDialog):
         self.light=QSlider(Qt.Horizontal); self.light.setRange(0,100); self.light.setValue(100); form.addRow('Условный свет, %',self.light)
         self.explode=QSlider(Qt.Horizontal); self.explode.setRange(0,100); form.addRow('Разобрать кожух',self.explode)
         self.shutter=QCheckBox('Закрыть виртуальный объектив'); controls.addWidget(self.shutter)
-        self.preview=QLabel(); self.preview.setMinimumSize(330,200); controls.addWidget(self.preview)
+        self.preview=QLabel(); self.preview.setMinimumSize(320,175); self.preview.setMaximumHeight(185); controls.addWidget(self.preview)
         label=QLabel('Сверху — условный 2D-эталон из геометрии. Это не оптический снимок выбранной линейной или передней камеры.'); label.setWordWrap(True); controls.addWidget(label)
         self.status=QLabel(); self.status.setWordWrap(True); controls.addWidget(self.status)
         for text,fn in [('Старт / пауза',self.toggle),('Сбросить проход',self.reset),('Сохранить 3D-сборки OBJ/STL',self.export),('Повторяемые 6 сценариев → отчёт',self.run_rehearsal)]:
@@ -113,6 +114,7 @@ class VirtualStandDialog(QDialog):
         for widget in (self.light,self.explode): widget.valueChanged.connect(self.refresh)
         self.shutter.toggled.connect(self.refresh); self.train_speed.valueChanged.connect(self.update_design)
         self.site.currentIndexChanged.connect(self.change_site); self.gauge.valueChanged.connect(self.gauge_changed)
+        apply_competition_theme(self)
         self.timer=QTimer(self); self.timer.timeout.connect(self.tick); self.timer.start(50); self.refresh(); self.update_design()
     def change_site(self,index):
         self.gauge.setEnabled(index==2); self.gauge.setValue(1520 if index==0 else 750 if index==1 else 45); self.gauge_changed()
@@ -145,7 +147,7 @@ class VirtualStandDialog(QDialog):
         indicator='unassessed' if not telemetry['assessed'] else ('event' if self.saved else 'idle')
         self.canvas.meshes=scene('platform' if self.mode.currentIndex() else 'bench',kind,self.position,self.explode.value()/100,shutter,indicator,gauge_mm=self.gauge.value())
         self.canvas.brightness=.3+.7*light/100; self.canvas.caption=f'Колея {self.gauge.value():g} мм • t={self.t:.2f}с • концепция, не калибровка камеры'; self.canvas.update()
-        rgb=cv2.cvtColor(image,cv2.COLOR_BGR2RGB); q=QImage(rgb.data,800,480,rgb.strides[0],QImage.Format_RGB888).copy(); self.preview.setPixmap(QPixmap.fromImage(q).scaled(400,240,Qt.KeepAspectRatio))
+        rgb=cv2.cvtColor(image,cv2.COLOR_BGR2RGB); q=QImage(rgb.data,800,480,rgb.strides[0],QImage.Format_RGB888).copy(); self.preview.setPixmap(QPixmap.fromImage(q).scaled(320,175,Qt.KeepAspectRatio))
         self.status.setText(f"{'Идёт проход' if self.running else 'Пауза'} • индикатор: {indicator}\nКарточек: {len(self.saved)} • виртуальное время: {self.t:.2f}с\nШаг визуализации50мс; не измеренный FPS камеры.\n"+(self.store.error or 'События требуют просмотра; индикация сбрасывается новым проходом.' if self.store else 'Журнал создаётся при первом синтетическом событии.'))
     def update_design(self,*args):
         d=engineering(self.train_speed.value()); t=thermal(); self.report.setPlainText(

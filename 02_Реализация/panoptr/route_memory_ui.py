@@ -43,8 +43,8 @@ class RouteMemoryWindow(QMainWindow):
         self.receiver=None; self.session=None; self.session_cache={}; self.demo_windows=[]; self.demo=demo
         self.rows=[]; self.unknown=[]; self.refreshing=False
         central=QWidget(); self.setCentralWidget(central); outer=QVBoxLayout(central)
-        heading=QLabel('КАРТА РЕЙСОВ  ·  Наблюдения → проверка → история участка → следующий рейс')
-        heading.setStyleSheet('font-size:18px;font-weight:600;color:#367c7b'); heading.setWordWrap(True); outer.addWidget(heading)
+        from ui_theme import create_competition_banner
+        outer.addWidget(create_competition_banner('КАРТА РЕЙСОВ И ПАМЯТЬ МАРШРУТА ВСМ', 'Наблюдения → верификация инженера → история участка по километражу → задание на следующий рейс'))
         note=QLabel('Карта по километражу, без подложки. GNSS поезда не равен месту объекта. Отсутствие предупреждений не подтверждает свободный путь.')
         note.setWordWrap(True); outer.addWidget(note)
         bar=QHBoxLayout(); outer.addLayout(bar)
@@ -95,6 +95,9 @@ class RouteMemoryWindow(QMainWindow):
         if session: self.status.setText('Текущий журнал доступен. Нажмите «Подключить журнал»: '+str(session)); self.initial_session=Path(session)
         else: self.initial_session=None
         QTimer.singleShot(0,self.fit_map)
+
+        from ui_theme import apply_competition_theme
+        apply_competition_theme(self)
 
     def fail(self,exc): QMessageBox.warning(self,'Карта рейсов',str(exc))
     def import_data(self):
@@ -164,7 +167,7 @@ class RouteMemoryWindow(QMainWindow):
         self.table.setRowCount(len(self.rows)); self.scene.blockSignals(True); self.scene.clear()
         low=min((r['chainage'] for r in self.rows),default=0)-100
         high=max((r['chainage'] for r in self.rows),default=1000)+100
-        self.scene.setSceneRect(0,0,1100,175); self.scene.addLine(50,95,1050,95,QPen(QColor('#68706a'),3))
+        self.scene.setSceneRect(0,0,1100,175); self.scene.addLine(50,95,1050,95,QPen(QColor('#305BA7'),4))
         for i,r in enumerate(self.rows):
             repeated=('Повторная зона' if r['kind'] in ('person','drone') else 'Повторное') if r['observations']>1 else 'Новое'
             values=[LABELS[r['kind']],f"{r['chainage']/1000:.3f}",r['display_state'],repeated,r['runs'],r['observations'],readable_time(r['last_seen'])]

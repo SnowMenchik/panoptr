@@ -11,9 +11,12 @@ class FinaleDialog(QDialog):
         super().__init__(None);self.window=window
         self.setWindowFlags(Qt.Window | Qt.WindowSystemMenuHint | Qt.WindowMinMaxButtonsHint | Qt.WindowCloseButtonHint);self.series=None;self.read_only_series=False;self.current_config=None;self.last_signature=None;self.last_running=None;self.last_error=None;self._model_cache=None
         self.setWindowTitle('Panoptr — полигон и финал');self.resize(1180,940);self.root=Path(__file__).resolve().parent
-        outer=QVBoxLayout(self);note=QLabel('Главная задача: найти видимый признак, сохранить доказательство и передать человеку. Профиль колеи не является калибровкой; без неё метры неизвестны.');note.setWordWrap(True);outer.addWidget(note)
+        from ui_theme import apply_competition_theme, create_competition_banner
+        outer=QVBoxLayout(self);outer.addWidget(create_competition_banner('ПОЛИГОН И ФИНАЛ — ПУЛЬТ ИСПЫТАНИЙ ВСМ', 'Сквозной показ на двух камерах • Протокол серии опытов • Проверка готовности'))
+        note=QLabel('Главная задача: найти видимый признак, сохранить доказательство и передать человеку. Профиль колеи не является калибровкой; без неё метры неизвестны.');note.setWordWrap(True);outer.addWidget(note)
         self.tabs=QTabWidget();outer.addWidget(self.tabs);self.build_setup();self.build_trials();self.build_help()
         self.state=QLabel('Выберите задачу и источник.');self.state.setWordWrap(True);outer.addWidget(self.state)
+        apply_competition_theme(self)
         self.timer=QTimer(self);self.timer.timeout.connect(self.poll);self.timer.start(300)
     def safe(self,fn):
         try:return fn()

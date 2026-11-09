@@ -32,7 +32,9 @@ class LabWindow(QMainWindow):
         self.process.readyReadStandardOutput.connect(self.read_log); self.process.finished.connect(self.finished)
         self.process.errorOccurred.connect(self.process_error)
         self.current_report=None; self.session=None; self.current_operation=''; self.busy_buttons=[]
+        from ui_theme import apply_competition_theme, create_competition_banner
         central=QWidget(); layout=QVBoxLayout(central)
+        layout.addWidget(create_competition_banner('ЛАБОРАТОРИЯ ДАННЫХ И МОДЕЛЕЙ PANOPTR', 'Проверка пар и масок • Авторазметка • Подготовка выборок без утечки сцен • Обучение YOLO26'))
         note=QLabel('Изображения → проверка разметки → подготовка → обучение → оценка. Исходные данные сохраняются. Запуск обучения — отдельной кнопкой.')
         note.setWordWrap(True); layout.addWidget(note)
         self.tabs=QTabWidget(); layout.addWidget(self.tabs,1)
@@ -45,6 +47,7 @@ class LabWindow(QMainWindow):
         self.annotation_widget=AnnotationWidget(); self.tabs.addTab(self.annotation_widget,'4. Разметка')
         # Annotation has its own worker log; avoid two logs consuming the editor area.
         self.tabs.currentChanged.connect(lambda index:(self.log.setVisible(index!=3),self.state.setVisible(index!=3)))
+        apply_competition_theme(self)
 
     def path_field(self,form,label,directory=True):
         edit=QLineEdit(); row=QWidget(); box=QHBoxLayout(row); box.setContentsMargins(0,0,0,0); box.addWidget(edit)
