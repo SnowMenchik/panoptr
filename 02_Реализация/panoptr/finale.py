@@ -1,3 +1,4 @@
+import os
 """Field demonstration profiles and auditable single-target trials; no training/control."""
 from pathlib import Path
 from datetime import datetime,timezone
