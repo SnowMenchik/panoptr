@@ -1,0 +1,6 @@
+scenario_id,title,speed_kmh,weather,motion_blur,vibration_px,processed_frames,source_frames_read,known_defects,observed_known_defects,true_positives,false_alarms,missed_known_defects,precision,recall_observed_frames,recall_all_frames,f1_score,average_latency_ms,p95_latency_ms,processing_fps,dropped_frames,camera_off_frames,camera_recovery_sec,gnss_recovery_sec
+01_baseline_0kmh_distortion,Базовый контроль при оптических искажениях (0 км/ч),100,none,0,0,260,260,156,156,156,12,0,0.9286,1.0,1.0,0.963,1.122,1.376,876.22,0,0,0.0,0.0
+02_speed_300kmh_motion_blur,Высокая скорость 300 км/ч и смаз движения,300,none,6,2,260,260,156,156,156,12,0,0.9286,1.0,1.0,0.963,2.612,2.939,365.7,0,0,0.0,0.0
+03_speed_350kmh_vibration_weather,350 км/ч + вибрация + осадки (дождь/туман),350,rain,9,4,248,260,156,148,148,12,8,0.925,1.0,0.9487,0.9367,3.769,4.202,256.47,12,0,0.0,0.0
+04_speed_400kmh_fault_recovery,400 км/ч + отказ камеры (2 с) + потеря GNSS (3 с) + пропуск кадров,400,fog,11,5,196,260,156,116,116,10,40,0.9206,1.0,0.7436,0.8227,2.924,3.284,328.38,14,50,0.03,0.03
+05_speed_400kmh_high_load,"Предельная нагрузка 400 км/ч (снег, вибрация, сбои связи и камеры)",400,snow,13,6,206,260,156,122,122,11,34,0.9173,1.0,0.7821,0.8443,9.956,10.748,99.19,16,38,0.03,0.03

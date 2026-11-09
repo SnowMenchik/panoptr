@@ -19,7 +19,7 @@ def main():
     args=sys.argv[2:]
     entries={'finale':'launch_finale.py','main':'launch_final.py','lab':'dataset_lab/main.py','routes':'launch_route_memory.py',
      'stand':'launch_virtual_stand.py','simulator':'vsm_simulator/main.py','camera':'launch_camera_design.py',
-     'path':'launch_path_understanding.py','events':'launch_event_benchmark.py','check':'portable_check.py'}
+     'path':'launch_path_understanding.py','events':'launch_event_benchmark.py','stress_matrix':'run_vsm_stress_matrix.py','check':'portable_check.py'}
     if command not in entries:raise SystemExit('Unknown module')
     entry=APP/entries[command]
     sys.path.insert(0,str(entry.parent));os.chdir(entry.parent);sys.argv=[str(entry),*args]

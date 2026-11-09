@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "scenario_id": "04_speed_400kmh_fault_recovery",
+  "title": "400 км/ч + отказ камеры (2 с) + потеря GNSS (3 с) + пропуск кадров",
+  "video": "synthetic_vsm_corridor_260frames_25fps",
+  "ground_truth": "ground_truth_stress_matrix.json",
+  "classes": {
+    "0": "defect_or_obstacle"
+  },
+  "scenario": {
+    "speed_kmh": 400,
+    "reference_speed_kmh": 400,
+    "motion_blur": 11,
+    "vibration_px": 5,
+    "brightness": 0.9,
+    "weather": "fog",
+    "weather_strength": 30,
+    "frame_drop_percent": 10,
+    "camera_off_start_sec": 3.0,
+    "camera_off_duration_sec": 1.97,
+    "gnss_loss_start_sec": 5.52,
+    "gnss_loss_duration_sec": 2.97,
+    "cpu_load_percent": 0,
+    "gpu_load_percent": 0,
+    "seed": 2608
+  },
+  "metrics": {
+    "processed_frames": 196,
+    "source_frames_read": 260,
+    "detected_defects": 126,
+    "known_defects": 156,
+    "observed_known_defects": 116,
+    "missed_known_defects": 40,
+    "false_alarms": 10,
+    "true_positives": 116,
+    "precision": 0.9206,
+    "recall_observed_frames": 1.0,
+    "recall_all_frames": 0.7436,
+    "f1_score": 0.8227,
+    "average_latency_ms": 2.924,
+    "p95_latency_ms": 3.284,
+    "average_inference_ms": 0.576,
+    "processing_fps": 328.38,
+    "camera_recovery_sec": 0.03,
+    "gnss_recovery_sec": 0.03,
+    "dropped_frames": 14,
+    "camera_off_frames": 50,
+    "average_cpu_percent": 79.4,
+    "average_process_memory_mib": 241.85,
+    "wall_time_sec": 0.5969
+  },
+  "notes": [
+    "Verified with ground-truth boxes (IoU >= 0.5) and vibration coordinate compensation."
+  ]
+}
