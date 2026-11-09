@@ -51,7 +51,7 @@ def configuration(app_root,task,site,source_kind,source,device='CPU',size=None,c
     if source_kind=='camera' and (isinstance(source,bool) or not isinstance(source,int) or source<0):raise ValueError('Выберите подключённую камеру.')
     size=size or spec['size']
     if size not in (320,416,512,640,960,1024,1280,1536) or not .05<=confidence<=.95:raise ValueError('Неверный размер/порог.')
-    return {'profile':site,'task':task,'model':str(model.resolve()),'model_sha256':digest(model),'source_kind':source_kind,'source':str(source),
+    return {'profile':site,'task':task,'model':os.path.abspath(model),'model_sha256':digest(model),'source_kind':source_kind,'source':str(source),
             'device':device,'image_size':size,'confidence':confidence,'automatic_train_control':False}
 
 class TrialSeries:

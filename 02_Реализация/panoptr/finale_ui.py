@@ -1,6 +1,6 @@
 """A short demonstration workflow on top of the existing acquisition and evidence path."""
 from pathlib import Path
-import json,time,uuid
+import json,os,time,uuid
 from PySide6.QtCore import QTimer,Qt
 from PySide6.QtWidgets import (QDialog,QVBoxLayout,QHBoxLayout,QFormLayout,QTabWidget,QWidget,QLabel,QPushButton,QComboBox,
  QDoubleSpinBox,QLineEdit,QPlainTextEdit,QTableWidget,QTableWidgetItem,QFileDialog,QMessageBox,QScrollArea)
@@ -51,7 +51,7 @@ class FinaleDialog(QDialog):
         preferred='drone.avi' if task_key=='drone' else 'rail.avi'
         for name in [preferred,'rail.avi','drone.avi']:
             p=ex/name
-            if p.is_file():return str(p.resolve())
+            if p.is_file():return os.path.abspath(p)
         return ''
     def _sync_default_video(self):
         current=self.file.text().strip()
@@ -73,7 +73,7 @@ class FinaleDialog(QDialog):
         cfg=configuration(self.root,self.task.currentData(),self.site_profile(),kind,source,self.device.currentText(),int(self.size.currentText()),self.conf.value())
         if p.running:p.stop()
         p.source.setCurrentIndex(1 if kind=='file' else 0)
-        if kind=='file':p.source_path.setText(str(Path(source).resolve()))
+        if kind=='file':p.source_path.setText(os.path.abspath(source))
         p.model_preset.setCurrentIndex(max(0,p.model_preset.findText('Пользовательская')));p.model_path.setText(cfg['model']);p.device.setCurrentIndex(p.device.findData(cfg['device']));p.image_size.setCurrentText(str(cfg['image_size']));p.confidence.setValue(cfg['confidence']);p.inference_fps.setValue(4)
         p.policy.update(zone=[],speed_kmh=0.,visible_length_m=0.,geometry_calibration_file='');p._inference_settings_changed()
         self.current_config=cfg;self.truth_class.setText(TASKS[self.task.currentData()]['classes'][0]);self.last_signature=self.fingerprint();self.last_running=p.running
@@ -96,7 +96,7 @@ class FinaleDialog(QDialog):
             cfg=configuration(self.root,t_key,self.site_profile(),kind,src,self.device.currentText(),int(self.size.currentText()),self.conf.value())
             if p.running:p.stop()
             p.source.setCurrentIndex(1 if kind=='file' else 0)
-            if kind=='file':p.source_path.setText(str(Path(src).resolve()))
+            if kind=='file':p.source_path.setText(os.path.abspath(src))
             p.model_preset.setCurrentIndex(max(0,p.model_preset.findText('Пользовательская')));p.model_path.setText(cfg['model']);p.device.setCurrentIndex(p.device.findData(cfg['device']));p.image_size.setCurrentText(str(cfg['image_size']));p.confidence.setValue(cfg['confidence']);p.inference_fps.setValue(4)
             p.policy.update(zone=[],speed_kmh=0.,visible_length_m=0.,geometry_calibration_file='');p._inference_settings_changed()
             write(self.window.event_store.root/f'channel_{p.channel}_finale_profile.json',cfg)
