@@ -14,5 +14,5 @@ set "PYTHONDONTWRITEBYTECODE=1"
 set "PYTHONPATH="
 set "PYTHONHOME=%HERE%runtime"
 cd /d "%HERE%"
-"%HERE%runtime\python.exe" -s -E "%HERE%verify_development.py"  %*
-if errorlevel 1 pause
+"%HERE%runtime\python.exe" -s -E "%HERE%verify_development.py" %*
+pause
