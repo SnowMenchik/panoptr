@@ -1,9 +1,27 @@
 ﻿$ErrorActionPreference = 'Stop'
 $here = $PSScriptRoot
-if (Test-Path (Join-Path $here 'runtime\python.exe')) {
-    $pyItem = Get-Item (Join-Path $here 'runtime\python.exe')
-    if ($pyItem.Length -gt 10000) { exit 0 }
+
+$dirs = @(
+    'runtime',
+    'examples',
+    '02_Реализация\panoptr\models',
+    '02_Реализация\panoptr\dataset_lab\annotation_vendor',
+    '08_Обучение\models',
+    '08_Обучение\runs',
+    '09_Дополнительные_данные_2026-10-11',
+    '10_Лаборатория_данных\annotation_models'
+)
+
+$pts = @('yolo26n.pt', 'yolo26s-seg.pt', 'yolo26n-pose.pt')
+
+$needLink = $false
+foreach ($d in $dirs) {
+    if (-not (Test-Path (Join-Path $here $d))) { $needLink = $true; break }
 }
+foreach ($pt in $pts) {
+    if (-not (Test-Path (Join-Path $here ('02_Реализация\panoptr\' + $pt)))) { $needLink = $true; break }
+}
+if (-not $needLink) { exit 0 }
 
 $roots = @(
     (Split-Path $here -Parent),
@@ -31,16 +49,6 @@ if (-not $src) {
 
 Write-Host ('[PANOPTR] Подключение бинарных компонентов (runtime и весов .pt) в текущую ветку: ' + $here)
 
-$dirs = @(
-    'runtime',
-    'examples',
-    '02_Реализация\panoptr\models',
-    '02_Реализация\panoptr\dataset_lab\annotation_vendor',
-    '08_Обучение\models',
-    '09_Дополнительные_данные_2026-10-11',
-    '10_Лаборатория_данных\annotation_models'
-)
-
 foreach ($d in $dirs) {
     $s = Join-Path $src $d
     $t = Join-Path $here $d
@@ -53,7 +61,7 @@ foreach ($d in $dirs) {
     }
 }
 
-foreach ($pt in @('yolo26n.pt', 'yolo26s-seg.pt', 'yolo26n-pose.pt')) {
+foreach ($pt in $pts) {
     $sp = Join-Path $src ('02_Реализация\panoptr\' + $pt)
     $tp = Join-Path $here ('02_Реализация\panoptr\' + $pt)
     if ((Test-Path $sp) -and -not (Test-Path $tp)) {

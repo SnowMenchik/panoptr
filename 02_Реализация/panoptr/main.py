@@ -848,7 +848,7 @@ class CameraPanel(QGroupBox):
         edit=QPlainTextEdit(json.dumps(self.policy,ensure_ascii=False,indent=2)); layout.addWidget(edit)
         load=QPushButton('Загрузить сохранённый профиль'); layout.addWidget(load)
         def load_profile():
-            path,_=QFileDialog.getOpenFileName(dialog,'Профиль контроля',str(ROOT.parents[1]/'11_Финальный_модуль'),'JSON (*.json)')
+            path,_=QFileDialog.getOpenFileName(dialog,'Профиль контроля',str(ROOT.parents[1]/'data/sessions'),'JSON (*.json)')
             if path:
                 try: edit.setPlainText(json.dumps(json.loads(Path(path).read_text(encoding='utf-8')),ensure_ascii=False,indent=2))
                 except Exception as exc: QMessageBox.warning(dialog,'Профиль',str(exc))
@@ -974,7 +974,7 @@ class CameraPanel(QGroupBox):
         try: self.capture.start(camera_index,self.capture_width,self.capture_height,self.capture_fps)
         except Exception as exc: self.status.setText(str(exc)); return
         if self.source_kind=='file':
-            path=Path(camera_index).resolve(); stat=path.stat(); self.source_ref={'kind':'file','path':str(path),'bytes':stat.st_size,'mtime_ns':stat.st_mtime_ns,'sha256':None,'hash_note':'Live playback does not hash the whole video; CPU rehearsal records its SHA256.'}
+            path=Path(os.path.abspath(camera_index)); stat=path.stat(); self.source_ref={'kind':'file','path':str(path),'bytes':stat.st_size,'mtime_ns':stat.st_mtime_ns,'sha256':None,'hash_note':'Live playback does not hash the whole video; CPU rehearsal records its SHA256.'}
         elif self.source_kind=='stream':
             from urllib.parse import urlsplit
             parsed=urlsplit(str(camera_index)); self.source_ref={'kind':'stream','scheme':parsed.scheme,'host':parsed.hostname,'path':parsed.path,'credentials_and_query_recorded':False}

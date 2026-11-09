@@ -307,9 +307,9 @@ def _run_simulation(
     }
     report = {
         "schema_version": 1,
-        "video": str(Path(video_path).resolve()),
-        "model": str(Path(model_path).resolve()),
-        "ground_truth": str(Path(ground_truth_path).resolve()) if ground_truth_path else None,
+        "video": os.path.abspath(video_path),
+        "model": os.path.abspath(model_path),
+        "ground_truth": os.path.abspath(ground_truth_path) if ground_truth_path else None,
         "device": "GPU" if device != "cpu" else "CPU",
         "image_size": image_size,
         "confidence": confidence,

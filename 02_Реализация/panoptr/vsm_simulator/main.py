@@ -9,6 +9,7 @@ setup()
 
 import json
 import multiprocessing as mp
+import os
 import sys
 import threading
 from pathlib import Path
@@ -89,10 +90,10 @@ class MainWindow(QMainWindow):
         self.resize(1500, 900)
         self.worker: SimulationThread | None = None
 
-        self.video = QLineEdit()
+        self.video = QLineEdit(self._default_video())
         self.model = QLineEdit(self._default_model())
         self.ground_truth = QLineEdit()
-        self.output = QLineEdit(str(ROOT / "results"))
+        self.output = QLineEdit(os.path.abspath(APP_ROOT.parents[1] / "data" / "vsm_results"))
         files = QGroupBox("Входные данные")
         files_grid = QGridLayout(files)
         self._file_row(files_grid, 0, "Видео", self.video, self._browse_video)
@@ -183,9 +184,14 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(central)
 
     @staticmethod
+    def _default_video() -> str:
+        cand = APP_ROOT.parents[1] / "examples" / "rail.avi"
+        return os.path.abspath(cand) if cand.is_file() else ""
+
+    @staticmethod
     def _default_model() -> str:
         preferred = APP_ROOT / "models" / "rail_defects_yolo26s_v1.pt"
-        return str(preferred if preferred.exists() else APP_ROOT / "yolo26n.pt")
+        return os.path.abspath(preferred if preferred.exists() else APP_ROOT / "yolo26n.pt")
 
     @staticmethod
     def _file_row(layout: QGridLayout, row: int, title: str, field: QLineEdit, callback) -> None:
@@ -196,7 +202,7 @@ class MainWindow(QMainWindow):
         layout.addWidget(button, row, 2)
 
     def _browse_video(self) -> None:
-        path, _ = QFileDialog.getOpenFileName(self, "Видео", "", "Видео (*.mp4 *.avi *.mkv *.mov);;Все файлы (*)")
+        path, _ = QFileDialog.getOpenFileName(self, "Видео", os.path.abspath(APP_ROOT.parents[1] / "examples"), "Видео (*.mp4 *.avi *.mkv *.mov);;Все файлы (*)")
         if path: self.video.setText(path)
 
     def _browse_model(self) -> None:
@@ -204,7 +210,7 @@ class MainWindow(QMainWindow):
         if path: self.model.setText(path)
 
     def _browse_truth(self) -> None:
-        path, _ = QFileDialog.getOpenFileName(self, "Эталон", "", "JSON (*.json)")
+        path, _ = QFileDialog.getOpenFileName(self, "Эталон", os.path.abspath(ROOT), "JSON (*.json)")
         if path: self.ground_truth.setText(path)
 
     def _browse_output(self) -> None:

@@ -8,7 +8,7 @@ def main():
     target=ROOT/'data/tests'/datetime.now().strftime('%Y%m%d_%H%M%S_%f');target.mkdir(parents=True)
     temp=target/'tmp';temp.mkdir()
     env=os.environ.copy();env.update(QT_QPA_PLATFORM='offscreen',PYTHONDONTWRITEBYTECODE='1',PYTHONNOUSERSITE='1',TEMP=str(temp),TMP=str(temp),PYTHONUTF8='1')
-    suites=[('application',APP,['test_camera_design','test_event_benchmark','test_final','test_path_understanding','test_route_memory','test_virtual_stand','test_finale','test_profile_compatibility','test_gpu_launch']),
+    suites=[('application',APP,['test_camera_design','test_event_benchmark','test_final','test_path_understanding','test_route_memory','test_virtual_stand','test_finale','test_profile_compatibility','test_gpu_launch','test_vsm_stress_matrix']),
             ('data_lab',APP/'dataset_lab',['test_annotation','test_lab'])]
     result=[]
     for name,cwd,modules in suites:

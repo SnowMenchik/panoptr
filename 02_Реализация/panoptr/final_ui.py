@@ -1,7 +1,7 @@
 """Reviewable event cards, CPU rehearsals and read-only preparation tools."""
 from pathlib import Path
 from datetime import datetime
-import json,sys
+import json,os,sys
 import cv2
 from PySide6.QtCore import QProcess,QTimer,Qt
 from PySide6.QtWidgets import (QDialog,QVBoxLayout,QHBoxLayout,QTabWidget,QWidget,QLabel,QPushButton,QLineEdit,QPlainTextEdit,
@@ -11,7 +11,7 @@ from final_core import save_json,read_image
 from final_store import ArchiveStore
 
 ROOT=Path(__file__).resolve().parent
-WORK=ROOT.parents[1]/'11_Финальный_модуль'
+WORK=ROOT.parents[1]/'data'
 
 class FinalDashboard(QDialog):
     def __init__(self,panels,store,parent=None):
@@ -111,7 +111,7 @@ class FinalDashboard(QDialog):
         if path: self.view_store.export(path); self.state.setText('Сохранён отчёт и ZIP: '+path)
     def build_rehearsal(self):
         page=QWidget(); layout=QVBoxLayout(page); form=QFormLayout(); layout.addLayout(form)
-        self.video=self.field(form,'Локальное видео'); self.model=self.field(form,'Локальные веса'); self.model.setText(str(ROOT/'models/person_security_yolo26n.pt'))
+        self.video=self.field(form,'Локальное видео'); def_v=ROOT.parents[1]/'examples/rail.avi'; self.video.setText(os.path.abspath(def_v) if def_v.is_file() else ''); self.model=self.field(form,'Локальные веса'); self.model.setText(os.path.abspath(ROOT/'models/person_security_yolo26n.pt'))
         self.channel=QComboBox(); self.channel.addItems(['Профиль камеры 1','Профиль камеры 2']); form.addRow('Контроль и роли классов',self.channel)
         self.limit=QSpinBox(); self.limit.setRange(3,300); self.limit.setValue(12); form.addRow('Число отобранных кадров',self.limit)
         self.every=QSpinBox(); self.every.setRange(1,10000); self.every.setValue(1); form.addRow('Шаг кадров',self.every)
