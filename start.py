@@ -1,6 +1,6 @@
 """Portable dispatcher; child tools inherit only the included runtime."""
 from pathlib import Path
-import os,sys,runpy
+import os,subprocess,sys,runpy
 ROOT=Path(__file__).resolve().parent
 APP=ROOT/'02_Реализация/panoptr'
 os.environ['PYTHONHOME']=str(ROOT/'runtime')
@@ -17,6 +17,8 @@ sys.dont_write_bytecode=True
 def _ensure_dirs():
     for d in ['data/sessions','data/route_memory','data/event_benchmark','data/vsm_results','10_Лаборатория_данных']:
         (ROOT/d).mkdir(parents=True,exist_ok=True)
+    if os.name=='nt' and not (ROOT/'08_Обучение/runs').exists() and (ROOT/'link_runtime.ps1').is_file():
+        subprocess.run(['powershell','-NoProfile','-ExecutionPolicy','Bypass','-File',str(ROOT/'link_runtime.ps1')],check=False)
 
 def main():
     _ensure_dirs()
