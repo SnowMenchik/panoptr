@@ -1,0 +1,7 @@
+{
+  "passed": true,
+  "physical_directory_move": true,
+  "spaces_and_cyrillic": true,
+  "no_external_python": true,
+  "settings_rebased": true
+}

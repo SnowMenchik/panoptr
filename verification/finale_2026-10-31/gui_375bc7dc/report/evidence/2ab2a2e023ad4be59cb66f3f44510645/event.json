@@ -1,0 +1,139 @@
+{
+  "event_id": "2ab2a2e023ad4be59cb66f3f44510645",
+  "channel": 0,
+  "generation": 7,
+  "first_seen": 525521.765,
+  "last_seen": 525522.171,
+  "sequence": 57,
+  "class_name": "rail_break",
+  "hits": 2,
+  "valid_hits": 2,
+  "observation_state": "observed_repeatedly",
+  "operator_status": "unreviewed",
+  "created_utc": "2026-10-31T04:44:12.312901+00:00",
+  "peak_confidence": 0.69091796875,
+  "box": [
+    231.25,
+    187.25,
+    427.0,
+    509.75
+  ],
+  "confidence": 0.69091796875,
+  "role": "defect",
+  "zone": {
+    "location": "zone_not_set",
+    "overlap": null,
+    "basis": "no configured path zone"
+  },
+  "quality": {
+    "assessed": true,
+    "reasons": [],
+    "age_ms": 79.00000002700835,
+    "blur_variance": 173.29440673612953,
+    "dark_fraction": 0.017021484375,
+    "bright_fraction": 0.20198486328125,
+    "actual_analysis_fps": 2.463054187440718,
+    "coverage_status": "not_calibrated",
+    "coverage": null,
+    "blur_threshold_enabled": false,
+    "blur_threshold_calibrated": false,
+    "warning": "Setting a threshold alone does not prove calibration. Blur threshold and visible length require task-specific experiments."
+  },
+  "requires_review": true,
+  "alarm_probability": null,
+  "provenance": {
+    "model": "C:\\Users\\1\\Documents\\ChatGPT\\vsm\\PANOPTR_PORTABLE_2026-10-19\\02_Реализация\\panoptr\\models\\rail9_finetuned_2026.pt",
+    "model_sha256": "28c28dc0937e134dfe426138f56e8dc146d3336cb15dd7d654e672cb6e63683b",
+    "settings": {
+      "model": "C:\\Users\\1\\Documents\\ChatGPT\\vsm\\PANOPTR_PORTABLE_2026-10-19\\02_Реализация\\panoptr\\models\\rail9_finetuned_2026.pt",
+      "device": "GPU",
+      "image_size": 1280,
+      "confidence": 0.25,
+      "path_enabled": false,
+      "geometry_model": "",
+      "geometry_confidence": 0.35,
+      "geometry_image_size": 640,
+      "geometry_source_id": "{\"bytes\":76378926,\"hash_note\":\"Live playback does not hash the whole video; CPU rehearsal records its SHA256.\",\"kind\":\"file\",\"mtime_ns\":1793421843770074100,\"path\":\"C:\\\\Users\\\\1\\\\Documents\\\\ChatGPT\\\\vsm\\\\output\\\\final_upgrade_2026-10-31\\\\gui_375bc7dc\\\\software_fixture.avi\",\"sha256\":null}"
+    },
+    "generation": 7,
+    "sequence": 57,
+    "captured_at_monotonic": 525522.171,
+    "end_to_end_ms": 79.00000002700835,
+    "inference_ms": 38.101900019682944,
+    "actual_device": "GPU",
+    "source_kind": "file",
+    "source_time_s": 7.0,
+    "source_ref": {
+      "kind": "file",
+      "path": "C:\\Users\\1\\Documents\\ChatGPT\\vsm\\output\\final_upgrade_2026-10-31\\gui_375bc7dc\\software_fixture.avi",
+      "bytes": 76378926,
+      "mtime_ns": 1793421843770074100,
+      "sha256": null,
+      "hash_note": "Live playback does not hash the whole video; CPU rehearsal records its SHA256."
+    },
+    "zone": [],
+    "tracker": "iou",
+    "path_geometry": null,
+    "context_state": null
+  },
+  "evidence_observation": {
+    "box": [
+      231.25,
+      187.25,
+      427.0,
+      509.75
+    ],
+    "sequence": 54,
+    "quality": {
+      "assessed": true,
+      "reasons": [],
+      "age_ms": 359.99999998603016,
+      "blur_variance": 173.29440673612953,
+      "dark_fraction": 0.017021484375,
+      "bright_fraction": 0.20198486328125,
+      "actual_analysis_fps": 0.0,
+      "coverage_status": "not_calibrated",
+      "coverage": null,
+      "blur_threshold_enabled": false,
+      "blur_threshold_calibrated": false,
+      "warning": "Setting a threshold alone does not prove calibration. Blur threshold and visible length require task-specific experiments."
+    },
+    "provenance": {
+      "model": "C:\\Users\\1\\Documents\\ChatGPT\\vsm\\PANOPTR_PORTABLE_2026-10-19\\02_Реализация\\panoptr\\models\\rail9_finetuned_2026.pt",
+      "model_sha256": "28c28dc0937e134dfe426138f56e8dc146d3336cb15dd7d654e672cb6e63683b",
+      "settings": {
+        "model": "C:\\Users\\1\\Documents\\ChatGPT\\vsm\\PANOPTR_PORTABLE_2026-10-19\\02_Реализация\\panoptr\\models\\rail9_finetuned_2026.pt",
+        "device": "GPU",
+        "image_size": 1280,
+        "confidence": 0.25,
+        "path_enabled": false,
+        "geometry_model": "",
+        "geometry_confidence": 0.35,
+        "geometry_image_size": 640,
+        "geometry_source_id": "{\"bytes\":76378926,\"hash_note\":\"Live playback does not hash the whole video; CPU rehearsal records its SHA256.\",\"kind\":\"file\",\"mtime_ns\":1793421843770074100,\"path\":\"C:\\\\Users\\\\1\\\\Documents\\\\ChatGPT\\\\vsm\\\\output\\\\final_upgrade_2026-10-31\\\\gui_375bc7dc\\\\software_fixture.avi\",\"sha256\":null}"
+      },
+      "generation": 7,
+      "sequence": 54,
+      "captured_at_monotonic": 525521.765,
+      "end_to_end_ms": 359.99999998603016,
+      "inference_ms": 30.2693999838084,
+      "actual_device": "GPU",
+      "source_kind": "file",
+      "source_time_s": 6.625,
+      "source_ref": {
+        "kind": "file",
+        "path": "C:\\Users\\1\\Documents\\ChatGPT\\vsm\\output\\final_upgrade_2026-10-31\\gui_375bc7dc\\software_fixture.avi",
+        "bytes": 76378926,
+        "mtime_ns": 1793421843770074100,
+        "sha256": null,
+        "hash_note": "Live playback does not hash the whole video; CPU rehearsal records its SHA256."
+      },
+      "zone": [],
+      "tracker": "iou",
+      "path_geometry": null,
+      "context_state": null
+    }
+  },
+  "evidence_ready_at_monotonic": 525522.203,
+  "evidence_saved": true
+}
