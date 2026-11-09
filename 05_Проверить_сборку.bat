@@ -15,4 +15,4 @@ set "PYTHONPATH="
 set "PYTHONHOME=%HERE%runtime"
 cd /d "%HERE%"
 "%HERE%runtime\python.exe" -s -E "%HERE%start.py" check %*
-if errorlevel 1 pause
+pause

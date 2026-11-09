@@ -1,4 +1,4 @@
-﻿@echo off
+@echo off
 chcp 65001 >nul
 setlocal
 set "HERE=%~dp0"
@@ -15,4 +15,4 @@ set "PYTHONPATH="
 set "PYTHONHOME=%HERE%runtime"
 cd /d "%HERE%"
 "%HERE%runtime\python.exe" -s -E "%HERE%start.py" stress_matrix %*
-if errorlevel 1 pause
+pause
