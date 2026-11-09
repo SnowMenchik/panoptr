@@ -11,7 +11,7 @@ from final_core import save_json
 from event_benchmark import new_project,validate,freeze
 
 ROOT=Path(__file__).resolve().parent
-WORK=ROOT.parents[1]/'12_Оценка_событий'
+WORK=ROOT.parents[1]/'data/event_benchmark'; WORK.mkdir(parents=True,exist_ok=True)
 
 class BoxCanvas(QWidget):
     changed=Signal()

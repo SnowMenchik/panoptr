@@ -147,7 +147,7 @@ class FinaleDialog(QDialog):
         self.poll();self.series.finish();self.refresh_trials();self.state.setText('Опыт завершён. Оцените каждую карточку и нажмите «Опыт проверен».')
     def open_series(self):
         if self.series and self.series.active:raise ValueError('Завершите текущий опыт.')
-        p=QFileDialog.getExistingDirectory(self,'Папка серии с protocol.json')
+        start_s=str(self.window.event_store.root/'finale') if (self.window.event_store.root/'finale').is_dir() else str(self.root.parents[1]/'data/sessions'); p=QFileDialog.getExistingDirectory(self,'Папка серии с protocol.json',start_s)
         if p:
             self.series=TrialSeries.open(p);self.read_only_series=True;self.operator.setText(self.series.data['operator']);self.operator.setReadOnly(True);self.last_signature=self.fingerprint();self.last_running=self.panel().running;self.refresh_trials();self.state.setText('Серия открыта для проверки и экспорта. Перед новыми опытами создайте новую серию.')
     def selected_trial(self):
@@ -191,7 +191,7 @@ class FinaleDialog(QDialog):
         except Exception as exc:self.state.setText('Протокол: '+str(exc))
     def export(self):
         if not self.series:raise ValueError('Нет серии.')
-        parent=QFileDialog.getExistingDirectory(self,'Куда сохранить новую папку отчёта')
+        parent=QFileDialog.getExistingDirectory(self,'Куда сохранить новую папку отчёта',str(self.root.parents[1]/'data'))
         if parent:
             out=self.series.export(Path(parent)/('Panoptr_испытания_'+uuid.uuid4().hex[:8]));self.state.setText('Сохранено: '+str(out)+' и ZIP')
     def build_help(self):

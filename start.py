@@ -14,7 +14,12 @@ setup()
 os.environ['PYTHONDONTWRITEBYTECODE']='1'
 sys.dont_write_bytecode=True
 
+def _ensure_dirs():
+    for d in ['data/sessions','data/route_memory','data/event_benchmark','data/vsm_results','10_Лаборатория_данных']:
+        (ROOT/d).mkdir(parents=True,exist_ok=True)
+
 def main():
+    _ensure_dirs()
     command=sys.argv[1] if len(sys.argv)>1 else 'main'
     args=sys.argv[2:]
     entries={'finale':'launch_finale.py','main':'launch_final.py','lab':'dataset_lab/main.py','routes':'launch_route_memory.py',

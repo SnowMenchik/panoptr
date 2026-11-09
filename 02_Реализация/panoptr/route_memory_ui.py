@@ -9,7 +9,7 @@ from PySide6.QtWidgets import (QApplication,QMainWindow,QWidget,QVBoxLayout,QHBo
     QDialog,QDialogButtonBox,QFormLayout,QLineEdit,QDoubleSpinBox,QComboBox,QGraphicsView,QGraphicsScene,QGraphicsItem,QSplitter)
 from route_memory import RouteMemory,LABELS,utcnow,stamp,session_packets,import_file,seed_demo
 
-DEFAULT_DB=Path(__file__).resolve().parents[2]/'24_Карта_рейсов/data/route_memory.sqlite'
+DEFAULT_DB=Path(__file__).resolve().parents[2]/'data/route_memory/route_memory.sqlite'
 STATES={'pending':'На проверке','confirmed':'Подтверждено','rejected':'Отклонено','closed':'Закрыто'}
 
 def configure_fonts():
@@ -105,7 +105,7 @@ class RouteMemoryWindow(QMainWindow):
         except Exception as e:self.fail(e)
 
     def connect_session(self):
-        session=QFileDialog.getExistingDirectory(self,'Журнал поезда с session.json',str(self.initial_session or ''))
+        def_sess=self.initial_session or (Path(__file__).resolve().parents[2]/'data/sessions'); session=QFileDialog.getExistingDirectory(self,'Журнал поезда с session.json',str(def_sess))
         if not session:return
         values=form(self,'Идентификация журнала',[('train','Поезд','Поезд-01'),('run','Уникальный ID рейса',Path(session).name)])
         if not values:return
