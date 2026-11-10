@@ -13,13 +13,13 @@ PySide6>=6.7.0,<7.0.0             # В портативном runtime: 6.11.1
 # --- 2. Глубокое обучение, детекция YOLO26 и трекинг ByteTrack ---
 torch>=2.4.0                      # В портативном runtime: 2.13.0+cu126
 torchvision>=0.19.0               # В портативном runtime: 0.28.0+cu126
-ultralytics>=8.4.0                # В портативном runtime: 8.4.115
+ultralytics==8.4.115              # В портативном runtime: 8.4.115
 ultralytics-thop>=2.0.0           # В портативном runtime: 2.1.6
 lap>=0.5.12                       # Линейное назначение для трекера ByteTrack (path_tracking.py)
 einops>=0.8.0                     # Тензорные операции для моделей авторазметки (dataset_lab)
 
 # --- 3. Компьютерное зрение и обработка изображений ---
-opencv-python>=4.10.0             # Захват камер DirectShow/MSMF и видео (в runtime: 5.0.0.93)
+opencv-python>=4.10.0,<5.0.0      # Захват камер DirectShow/MSMF и видео (в runtime: 5.0.0.93)
 numpy>=1.26.0                     # Матричные расчёты и геометрия пути (в runtime: 2.3.5)
 pillow>=10.3.0                    # Загрузка/сохранение стоп-кадров evidence.png (в runtime: 12.3.0)
 scipy>=1.13.0                     # Фильтрация и сопоставление треков (в runtime: 1.18.0)

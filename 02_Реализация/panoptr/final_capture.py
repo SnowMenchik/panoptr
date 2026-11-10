@@ -1,5 +1,4 @@
 """Local recorded-video source; timestamps identify decoded frames, not real camera latency."""
-import shutil
 import time
 from pathlib import Path
 import cv2
@@ -21,12 +20,7 @@ class FileCapture:
         target=Path(path)
         if not target.is_file(): raise ValueError('Видеофайл не найден.')
         if _is_lfs_pointer(target):
-            fallback=Path(__file__).resolve().parent/'finale_examples/rail_fallback.avi'
-            if fallback.is_file() and not _is_lfs_pointer(fallback):
-                try:
-                    shutil.copyfile(str(fallback), str(target))
-                except Exception:
-                    target=fallback
+            raise ValueError('Видеофайл — указатель Git LFS, а не видео. Скачайте оригинал через Git LFS или выберите другой файл.')
         self.path=str(target); self.cap=cv2.VideoCapture(self.path); self.error=None
         if not self.cap.isOpened(): self.cap.release(); self.cap=None; raise ValueError('Видео не открывается.')
         self.actual_fps=float(self.cap.get(cv2.CAP_FPS if hasattr(cv2,'CAP_FPS') else cv2.CAP_PROP_FPS)) or 25.; self.sequence=0; self.finished=False; self.started_at=time.monotonic(); self.next_at=self.started_at

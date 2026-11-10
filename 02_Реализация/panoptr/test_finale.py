@@ -79,7 +79,7 @@ class Trials(unittest.TestCase):
     def test_configuration_change_invalidates_trial(self):
         key=self.s.begin('target','rail_break','');self.s.action('configuration_changed','Изменён порог');self.end();self.s.review(key);r=self.s.summary();self.assertEqual(r['changed_configuration_trials'],1);self.assertIsNone(r['event_recall'])
     def test_assistance_counts_only_active_trial(self):
-        self.s.action('start','Подготовка');self.s.begin('negative','','');self.s.action('help','Наставник поправил источник');self.end();self.assertEqual(self.s.summary()['assistance_count'],1);self.assertEqual(self.s.summary()['all_assistance_actions'],2)
+        self.s.action('start','Подготовка');self.s.begin('negative','','');self.s.action('help','Оператор поправил источник');self.end();self.assertEqual(self.s.summary()['assistance_count'],1);self.assertEqual(self.s.summary()['all_assistance_actions'],2)
     def test_export_active_or_inside_source_rejected(self):
         self.s.begin('negative','','')
         with self.assertRaises(ValueError):self.s.export(self.root/'report')

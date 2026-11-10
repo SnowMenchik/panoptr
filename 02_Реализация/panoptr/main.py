@@ -542,14 +542,6 @@ class InferenceScheduler:
             loaded_at=time.perf_counter()
             model=self._get_model(job.channel,job.options.model,device)
             self._last_load_ms=(time.perf_counter()-loaded_at)*1000
-            if self._last_load_ms > 50.0:
-                with self._condition:
-                    newer = self._pending.get(job.channel)
-                    if newer is not None and newer.generation == job.generation and newer.options == job.options:
-                        self._pending.pop(job.channel, None)
-                        job.sequence = newer.sequence
-                        job.captured_at = newer.captured_at
-                        job.frame = newer.frame
             started=time.perf_counter()
             result=model.predict(source=job.frame,imgsz=job.options.image_size,conf=job.options.confidence,
                 device=device,quantize=16 if use_half else None,verbose=False)[0]

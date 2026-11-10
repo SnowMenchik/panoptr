@@ -17,6 +17,6 @@ def setup():
         values=json.loads(settings.read_text(encoding='utf-8'))
         values.update({key:str(root/'data'/sub) for key,sub in [('datasets_dir','datasets'),('weights_dir','weights'),('runs_dir','runs')]})
         settings.write_text(json.dumps(values,ensure_ascii=False,indent=2),encoding='utf-8')
-    candidates=[Path(__file__).parent/'annotation_vendor',root/'runtime/Lib/site-packages',Path(__file__).parents[1]]
+    candidates=[Path(__file__).parents[1]]
     for folder in candidates:
         if str(folder) not in sys.path:sys.path.append(str(folder))

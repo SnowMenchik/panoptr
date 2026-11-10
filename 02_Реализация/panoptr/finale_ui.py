@@ -91,12 +91,15 @@ class FinaleDialog(QDialog):
         if self.series and self.series.active:raise ValueError('Завершите опыт перед перезапуском обоих каналов.')
         saved_channel=self.channel.currentIndex()
         primary_task=self.task.currentData()
-        secondary_task='drone' if primary_task!='drone' else 'rail'
+        secondary_task='person' if primary_task!='person' else 'rail'
         kind=self.source_kind.currentData()
+        prepared=[]
         for ch_idx,t_key in [(0,primary_task),(1,secondary_task)]:
             p=self.window.panels[ch_idx]
             src=self.file.text().strip() if kind=='file' and ch_idx==saved_channel else (self._default_video_for_task(t_key) or self.file.text().strip()) if kind=='file' else p.selected_camera_index()
             cfg=configuration(self.root,t_key,self.site_profile(),kind,src,self.device.currentText(),int(self.size.currentText()),self.conf.value())
+            prepared.append((ch_idx,t_key,p,src,cfg))
+        for ch_idx,t_key,p,src,cfg in prepared:
             if p.running:p.stop()
             p.source.setCurrentIndex(1 if kind=='file' else 0)
             if kind=='file':p.source_path.setText(os.path.abspath(src))
@@ -108,7 +111,7 @@ class FinaleDialog(QDialog):
         for p in self.window.panels:
             if not p.running:p.toggle_camera()
         self.last_signature=self.fingerprint();self.last_running=self.panel().running
-        self.state.setText('Оба канала (Канал 1 и Канал 2) запущены одновременно.')
+        self.state.setText('Запрос запуска двух каналов отправлен; проверьте состояние и кадры в основном окне.')
         self.window.showNormal();self.window.raise_();self.window.activateWindow()
     def stop_channel(self):
         if self.series:self.series.action('stop_channel','Остановка канала испытателем')
@@ -198,7 +201,9 @@ class FinaleDialog(QDialog):
         if parent:
             out=self.series.export(Path(parent)/('Panoptr_испытания_'+uuid.uuid4().hex[:8]));self.state.setText('Сохранено: '+str(out)+' и ZIP')
     def build_help(self):
-        page=QPlainTextEdit();page.setReadOnly(True);page.setPlainText('САМОСТОЯТЕЛЬНАЯ РЕПЕТИЦИЯ\n\n1. Проверьте комплект без интернета, начните с CPU. Не обновляйте зависимости перед показом.\n2. Выберите одну задачу и источник. Проверьте нормальную сцену, цель и возвращение к норме.\n3. Сохраните карточку и докажите происхождение кадра.\n4. Проведите несколько опытов с фиксированными порогами; отметьте пропуски, ложные события и помощь человека.\n5. Отключите и верните камеру. Закрытый объектив и отсутствие находок не доказывают свободный путь.\n6. Проверьте ZIP на другом ноутбуке.\n\nНОВОЕ ЗАДАНИЕ\nИзображения и метки → проверка пар/классов/групп → подготовка набора → совместимые локальные веса → отдельный запуск обучения → оценка и экспорт. Сначала небольшая проба по разрешению команды, рабочие веса не перезаписывать. Предложения авторазметки проверять вручную. SAM 3 требует отдельно доступных весов.\n\nКОЛЕЯ\n750/1520/макет — профиль испытания, не калибровка. Для метров нужны независимые проверочные точки конкретной камеры. Физические 400 км/ч, промышленные камеры и климат этой программной репетицией не подтверждаются.\n\nОБМЕН\nКарта рейсов принимает panoptr.route.v1. Пример пакета и запуск проверки находятся в папке finale_examples. Без достоверного места событие остаётся без координаты. Это демонстрационный контракт, не готовая интеграция с внутренними системами РЖД.');self.tabs.addTab(page,'3. Подготовка без наставника')
+        page=QPlainTextEdit(); page.setReadOnly(True)
+        page.setPlainText('ИСПЫТАНИЯ И ОГРАНИЧЕНИЯ\n\nПрофили 750/1520 мм и макета не являются калибровкой камеры. Для координат в метрах необходимы независимые проверочные точки.\n\nОценивайте каждую карточку вручную. Отсутствие пригодного кадра не означает, что путь свободен. Программные сценарии не подтверждают работу на ВСМ или климатическую стойкость.\n\nОбмен panoptr.route.v1 — демонстрационный контракт, не готовая интеграция с внутренними системами РЖД. При отсутствии достоверного положения событие сохраняется без координаты.')
+        self.tabs.addTab(page,'3. Испытания и ограничения')
     def closeEvent(self,event):
         if self.series and self.series.active:QMessageBox.information(self,'Опыт идёт','Завершите опыт, чтобы сохранить его длительность.');event.ignore();return
         self.timer.stop();event.accept()

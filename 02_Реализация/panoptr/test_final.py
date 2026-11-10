@@ -332,16 +332,39 @@ class Checks(unittest.TestCase):
             window.close()
 
 
-    def test_video_file_start_and_lfs_autoheal(self):
+    def test_slow_model_load_keeps_job_immutable_and_pending_frame(self):
+        from contextlib import nullcontext
+        from main import InferenceScheduler, InferenceJob, InferenceOptions
+        from unittest.mock import Mock, patch
+        opts=InferenceOptions('unused.pt','CPU',320,.2)
+        image=np.zeros((4,4,3),dtype=np.uint8)
+        job=InferenceJob(0,1,1,1.0,image,opts)
+        newer=InferenceJob(0,2,1,2.0,image.copy(),opts)
+        scheduler=InferenceScheduler()
+        model=Mock(); model.predict.return_value=['prediction']
+        try:
+            with scheduler._condition: scheduler._pending[0]=newer
+            def load(*args):
+                time.sleep(.06)
+                return model
+            with patch.object(scheduler,'_get_model',side_effect=load), patch('final_execution.gpu_guard',return_value=nullcontext()):
+                result=scheduler._predict(job,'cpu')
+            self.assertEqual(result,'prediction')
+            self.assertIs(scheduler._pending[0],newer)
+            self.assertEqual(job.sequence,1)
+            self.assertIs(model.predict.call_args.kwargs['source'],image)
+        finally:
+            with scheduler._condition: scheduler._pending.clear()
+            scheduler.close()
+
+    def test_lfs_pointer_is_not_overwritten(self):
         from final_capture import FileCapture
         with tempfile.TemporaryDirectory() as td:
-            lfs_file = Path(td) / 'rail.avi'
-            lfs_file.write_bytes(b'version https://git-lfs.github.com/spec/v1\noid sha256:9dbe37ff\nsize 133\n')
-            fc = FileCapture(loop=True)
-            fc.start(str(lfs_file))
-            seq, frame = fc.latest()
-            self.assertEqual(seq, 1)
-            self.assertIsNotNone(frame)
-            fc.stop()
+            target = Path(td) / 'rail.avi'
+            contents = b'version https://git-lfs.github.com/spec/v1\noid sha256:9dbe37ff\nsize 133\n'
+            target.write_bytes(contents)
+            with self.assertRaisesRegex(ValueError, 'Git LFS'):
+                FileCapture().start(str(target))
+            self.assertEqual(target.read_bytes(), contents)
 
 if __name__=='__main__': mp.freeze_support(); unittest.main(verbosity=2)

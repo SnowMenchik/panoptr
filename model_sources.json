@@ -1,0 +1,24 @@
+{
+ "commit":"cc8b7a3ea28fba87f6954fdd873348563ae666e3",
+ "files":{
+ "models/drone_broad10_interim_2026.pt":["09f8264d5c0fe183781269e400653b1894c71c51",20507055],
+ "models/overhead_railfod4_2026.pt":["d13a708960dc360c0e5051746b3f9efd47e1bae7",20376431],
+ "models/pantograph_arc_detector_yolo26n_v2.pt":["1b96e82247dd5e6a6e9460cc7b8da19d9431ad81",5445893],
+ "models/pantograph_contact_roi_yolo26n_v2.pt":["811e431cfeba1cf97bab771a1d60b4d9adb44f3c",5536645],
+ "models/pantograph_locator_yolo26s_v2.pt":["7660f0a2a990737fafa6dfecf1629814f77d35a1",20386437],
+ "models/person_railbench07_2026.pt":["66af6be0dd59287cd97ee35a80b02a029d82642d",5567855],
+ "models/person_security_yolo26n.pt":["918d32b6807e43ae611a9fbd8001daeb4eeaafd5",5420229],
+ "models/person_synrailobs08_2026.pt":["b12c0bef33616f6ce75a72e825194bd06f846332",5567407],
+ "models/rail400_detect8_2026.pt":["a8e593f21eb2f9210c50d54c432881855b7f5dfb",20518575],
+ "models/rail9_finetuned_2026.pt":["417822eace071bfe21cbb82a729769287ca0959e",20522991],
+ "models/rail_defects_yolo26s_v1.pt":["8e88654a8a937b13bfb9417af97047a23eb7b29d",20399045],
+ "models/rail_multiclass8_2026.pt":["3ac1048c2ace0ab60201d789bf56e7d117daa732",20519983],
+ "models/rail_surface_neu_seg_2026.pt":["9e93517a124794faba303e62e13d4da0794b90ba",23398751],
+ "models/rock_synrailobs09_2026.pt":["9f02ee58098cc4a77bc5e74d059a1ec3d83822eb",20422703],
+ "models/yolo26s_rfdd_fasteners_best.pt":["63921a824a20b7b4984a767571a6e9f45d651953",20464581],
+ "models/yolo26s_straight_track_seg_best.pt":["3f0e9c592b85bba8de33dcac07f6c9d5c225b90e",23387677],
+ "yolo26n-pose.pt":["c8d9c92bdb3fc602d44da9bb1c1d665cf1be68d0",7878574],
+ "yolo26n.pt":["be48188c33b581d7a51746b1bfffe21dbba8ccda",5544453],
+ "yolo26s-seg.pt":["9b8bfdea49928af67d0d96b80e94addc2682cb70",23467933]
+ }
+}
