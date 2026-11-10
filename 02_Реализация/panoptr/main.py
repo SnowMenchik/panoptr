@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import multiprocessing as mp
 import queue
 import sys
@@ -832,6 +833,7 @@ class CameraPanel(QGroupBox):
         self.model_path.textChanged.connect(self._inference_settings_changed)
         self.image_size.currentIndexChanged.connect(self._inference_settings_changed)
         self.source_path.textChanged.connect(self._source_settings_changed)
+        self.camera_selector.activated.connect(lambda *_: self.source.setCurrentIndex(0) if self.source.currentIndex()!=0 else None)
         for widget in [self.camera_selector,self.source]: widget.currentIndexChanged.connect(self._source_settings_changed)
         self.confidence.valueChanged.connect(self._inference_settings_changed)
         self.inference_fps.valueChanged.connect(self._inference_settings_changed)
@@ -980,14 +982,14 @@ class CameraPanel(QGroupBox):
             parsed=urlsplit(str(camera_index)); self.source_ref={'kind':'stream','scheme':parsed.scheme,'host':parsed.hostname,'path':parsed.path,'credentials_and_query_recorded':False}
         else: self.source_ref={'kind':'camera','index':camera_index,'name':self.camera_selector.currentText()}
         self.running = True
-        self.toggle.setText("Остановить")
+        self.toggle.setText("Остановить"); from ui_theme import style_buttons_in_widget; style_buttons_in_widget(self)
         self.status.setText("Подключение…")
 
     def stop(self) -> None:
         self.running = False
         self._invalidate()
         self.capture.stop()
-        self.toggle.setText("Запустить")
+        self.toggle.setText("Запустить"); from ui_theme import style_buttons_in_widget; style_buttons_in_widget(self)
         self.video.setText("Камера остановлена")
         self.video.setPixmap(QPixmap())
         self.status.setText("Остановлена")

@@ -19,6 +19,17 @@ def _ensure_dirs():
         (ROOT/d).mkdir(parents=True,exist_ok=True)
     if os.name=='nt' and not (ROOT/'08_Обучение/runs').exists() and (ROOT/'link_runtime.ps1').is_file():
         subprocess.run(['powershell','-NoProfile','-ExecutionPolicy','Bypass','-File',str(ROOT/'link_runtime.ps1')],check=False)
+    fallback_avi = APP / 'finale_examples/rail_fallback.avi'
+    if fallback_avi.is_file():
+        (ROOT / 'examples').mkdir(parents=True, exist_ok=True)
+        import shutil
+        for vname in ('rail.avi', 'drone.avi'):
+            vp = ROOT / 'examples' / vname
+            try:
+                if not vp.is_file() or vp.stat().st_size < 1024:
+                    shutil.copyfile(str(fallback_avi), str(vp))
+            except Exception:
+                pass
 
 def main():
     _ensure_dirs()

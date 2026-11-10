@@ -331,4 +331,17 @@ class Checks(unittest.TestCase):
         finally:
             window.close()
 
+
+    def test_video_file_start_and_lfs_autoheal(self):
+        from final_capture import FileCapture
+        with tempfile.TemporaryDirectory() as td:
+            lfs_file = Path(td) / 'rail.avi'
+            lfs_file.write_bytes(b'version https://git-lfs.github.com/spec/v1\noid sha256:9dbe37ff\nsize 133\n')
+            fc = FileCapture(loop=True)
+            fc.start(str(lfs_file))
+            seq, frame = fc.latest()
+            self.assertEqual(seq, 1)
+            self.assertIsNotNone(frame)
+            fc.stop()
+
 if __name__=='__main__': mp.freeze_support(); unittest.main(verbosity=2)
