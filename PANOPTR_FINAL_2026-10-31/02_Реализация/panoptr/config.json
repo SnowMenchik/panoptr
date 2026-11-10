@@ -3,6 +3,21 @@
     "width": 1280,
     "height": 760
   },
+  "storage": {
+    "nodes": [],
+    "session_subdir": true,
+    "failover": {
+      "connect_timeout_s": 2.0,
+      "operation_timeout_s": 10.0,
+      "max_attempts": 3,
+      "retry_backoff_s": 0.05,
+      "failure_threshold": 1,
+      "recovery_interval_s": 5.0,
+      "monitor_interval_s": 2.0,
+      "replicate_writes": true,
+      "sync_on_recovery": true
+    }
+  },
   "cameras": [
     {
       "camera_index": 0,

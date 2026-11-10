@@ -689,7 +689,7 @@ class CameraPanel(QGroupBox):
             try:
                 from final_core import validate_policy,save_json
                 self.policy=validate_policy(json.loads(edit.toPlainText())); self._inference_settings_changed()
-                if self.event_store: save_json(self.event_store.root/f'channel_{self.channel}_policy.json',self.policy)
+                if self.event_store: self.event_store.write_json(f'channel_{self.channel}_policy.json',self.policy)
                 dialog.accept()
             except Exception as exc: QMessageBox.warning(dialog,'Параметры',str(exc))
         button.clicked.connect(apply); dialog.exec()
@@ -1080,11 +1080,26 @@ class MainWindow(QMainWindow):
             for index, camera in enumerate(panel_configs)
         ]
         from final_store import EventStore
-        from final_core import save_json
         from datetime import datetime
         session=Path(config.get('event_session') or ROOT.parents[1]/'11_Финальный_модуль/sessions'/datetime.now().strftime('%Y%m%d_%H%M%S_%f'))
-        self.event_store=EventStore(session); save_json(session/'config.json',config)
-        for panel in self.panels: panel.event_store=self.event_store; save_json(session/f'channel_{panel.channel}_policy.json',panel.policy)
+        storage=config.get('storage') if isinstance(config.get('storage'),dict) else {}
+        configured=storage.get('nodes') or []
+        node_specs=None
+        if configured:
+            node_specs=[]
+            for index,spec in enumerate(configured):
+                if isinstance(spec,str): spec={'root':spec}
+                if not isinstance(spec,dict) or not (spec.get('root') or spec.get('path')): raise ValueError('Неверное описание узла хранения в config.json.')
+                base=Path(spec.get('root') or spec.get('path')).expanduser()
+                if not base.is_absolute(): base=ROOT/base
+                use_session=spec.get('session_subdir',storage.get('session_subdir',True))
+                node_specs.append({'id':str(spec.get('id') or f'node-{index+1}'),'root':base/session.name if use_session else base,'priority':spec.get('priority',index)})
+        storage_root=Path(node_specs[0]['root']) if node_specs else session
+        self.event_store=EventStore(storage_root,nodes=node_specs,settings=storage.get('failover'))
+        self.event_store.write_json('config.json',config)
+        for panel in self.panels:
+            panel.event_store=self.event_store
+            self.event_store.write_json(f'channel_{panel.channel}_policy.json',panel.policy)
         self.final_dashboard=None; self._telemetry_at=0.
         self.scheduler.signals.completed.connect(self._completed)
         self.scheduler.signals.failed.connect(self._failed)
@@ -1200,7 +1215,7 @@ class MainWindow(QMainWindow):
     def _open_route_memory(self):
         from route_memory_ui import RouteMemoryWindow
         if not getattr(self,'route_memory_window',None):
-            self.route_memory_window=RouteMemoryWindow(session=self.event_store.root,parent=self)
+            self.route_memory_window=RouteMemoryWindow(session=self.event_store.active_root,parent=self)
             self.route_memory_window.setWindowFlag(Qt.Window,True)
         self.route_memory_window.show(); self.route_memory_window.raise_()
         self.route_memory_window.timer.start(3000)

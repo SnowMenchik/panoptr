@@ -1,7 +1,7 @@
 """Reviewable event cards, CPU rehearsals and read-only preparation tools."""
 from pathlib import Path
 from datetime import datetime
-import json,sys
+import json,sys,time
 import cv2
 from PySide6.QtCore import QProcess,QTimer,Qt
 from PySide6.QtWidgets import (QDialog,QVBoxLayout,QHBoxLayout,QTabWidget,QWidget,QLabel,QPushButton,QLineEdit,QPlainTextEdit,
@@ -18,7 +18,7 @@ class FinalDashboard(QDialog):
         super().__init__(parent); self.panels=panels; self.store=store; self.view_store=store; self.setWindowTitle('Panoptr — события и подготовка финала'); self.resize(1180,850)
         self.process=QProcess(self); self.process.setProcessChannelMode(QProcess.MergedChannels); self.process.readyReadStandardOutput.connect(self.read_log); self.process.finished.connect(self.process_finished)
         self.process.errorOccurred.connect(self.process_error); self.busy=[]; self.rows=[]; layout=QVBoxLayout(self); self.tabs=QTabWidget(); layout.addWidget(self.tabs)
-        self.build_events(); self.build_rehearsal(); self.build_review(); self.build_readiness(); self.build_compare()
+        self.build_events(); self.build_storage(); self.build_rehearsal(); self.build_review(); self.build_readiness(); self.build_compare()
         self.button(layout,'Разметка и независимая оценка событий',self.open_event_benchmark)
         self.button(layout,'Инженерный расчёт камеры и покрытия',self.open_camera_design)
         self.button(layout,'Виртуальный 3D-стенд и компоновка оборудования',self.open_virtual_stand)
@@ -70,12 +70,49 @@ class FinalDashboard(QDialog):
         row=QHBoxLayout(); layout.addLayout(row); self.note=QLineEdit(); self.note.setPlaceholderText('Комментарий оператора'); row.addWidget(self.note)
         for title,status in [('Подтвердить','accepted'),('Отклонить','rejected'),('Закрыть','closed')]: self.button(row,title,lambda status=status:self.decide(status))
         info=QLabel('Повторные наблюдения не заменяют решение оператора. Нет независимого GT — Recall и FP/мин не вычисляются.'); info.setWordWrap(True); layout.addWidget(info); self.tabs.addTab(page,'События')
-    def set_store(self,store): self.view_store=store; self.session_label.setText(str(store.root)); self.refresh_events()
+    def build_storage(self):
+        page=QWidget(); layout=QVBoxLayout(page)
+        info=QLabel('Узлы хранения: ACTIVE — доступен, UNAVAILABLE — ошибка связи, DISABLED — отключён вручную, RECOVERING — проверяется. Ручное отключение исключает узел из маршрутизации и не отменяется автоматической проверкой. Включение возвращает узел только после успешной проверки. Запись считается сохранённой, если её принял хотя бы один доступный узел; состояние всех узлов указано в отчёте.'); info.setWordWrap(True); layout.addWidget(info)
+        self.storage_table=QTableWidget(0,6); self.storage_table.setHorizontalHeaderLabels(['Узел','Состояние','Папка','Ошибка','Запись/чтение','Следующая проверка']); self.storage_table.setEditTriggers(QTableWidget.NoEditTriggers); self.storage_table.setSelectionBehavior(QTableWidget.SelectRows); self.storage_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch); layout.addWidget(self.storage_table,1)
+        row=QHBoxLayout(); layout.addLayout(row)
+        self.button(row,'Обновить состояние',self.refresh_storage); self.button(row,'Отключить выбранный',self.disable_storage_node); self.button(row,'Включить и проверить',self.enable_storage_node); self.button(row,'Синхронизировать',self.sync_storage_node)
+        self.storage_history=QPlainTextEdit(); self.storage_history.setReadOnly(True); self.storage_history.setMaximumHeight(180); layout.addWidget(self.storage_history)
+        self.tabs.addTab(page,'Узлы хранения')
+    def refresh_storage(self):
+        try: rows=self.view_store.node_statuses(); history=self.view_store.storage_history(30)
+        except Exception as exc:
+            self.storage_history.setPlainText(str(exc)); return
+        self.storage_table.setRowCount(len(rows))
+        for i,row in enumerate(rows):
+            delay=max(0.,row.get('next_probe_at',0.)-time.monotonic()) if row.get('next_probe_at') else 0.
+            values=[row['id'],row['state'],row['root'],row.get('last_error',''),f"{row.get('writes_ok',0)}/{row.get('reads_ok',0)}",'сразу' if delay<=0 else f'через {delay:.0f} с']
+            for j,value in enumerate(values): self.storage_table.setItem(i,j,QTableWidgetItem(str(value)))
+        self.storage_history.setPlainText('\n'.join(json.dumps(item,ensure_ascii=False) for item in history))
+    def selected_storage_node(self):
+        index=self.storage_table.currentRow()
+        if not 0<=index<len(self.view_store.node_statuses()): raise ValueError('Выберите узел хранения.')
+        return self.view_store.node_statuses()[index]['id']
+    def disable_storage_node(self):
+        try:
+            node=self.selected_storage_node(); self.view_store.disable_node(node,'Отключён оператором в панели хранения.'); self.refresh_storage(); self.refresh_events()
+        except Exception as exc: QMessageBox.warning(self,'Узлы хранения',str(exc))
+    def enable_storage_node(self):
+        try:
+            node=self.selected_storage_node(); status=self.view_store.enable_node(node); self.refresh_storage(); self.refresh_events()
+            if status['state']!='ACTIVE': QMessageBox.warning(self,'Узлы хранения',f"Узел {node} не прошёл проверку: {status.get('last_error','')}")
+        except Exception as exc: QMessageBox.warning(self,'Узлы хранения',str(exc))
+    def sync_storage_node(self):
+        try:
+            node=self.selected_storage_node(); self.view_store.sync_node(node); self.refresh_storage()
+        except Exception as exc: QMessageBox.warning(self,'Узлы хранения',str(exc))
+    def set_store(self,store): self.view_store=store; self.session_label.setText(str(getattr(store,'active_root',store.root))); self.refresh_events(); self.refresh_storage()
     def open_archive(self):
         path=QFileDialog.getExistingDirectory(self,'Журнал с session.json',str(WORK/'sessions'))
         if path: self.set_store(ArchiveStore(path))
     def refresh_events(self):
         if not self.isVisible(): return
+        if self.tabs.tabText(self.tabs.currentIndex())=='Узлы хранения':
+            self.refresh_storage(); return
         selected=self.selected(); identifier=selected['event_id'] if selected else None; self.rows=self.view_store.events()
         self.events_table.blockSignals(True); self.events_table.setRowCount(len(self.rows))
         for i,r in enumerate(self.rows):
@@ -95,7 +132,7 @@ class FinalDashboard(QDialog):
     def show_event(self):
         r=self.selected()
         if not r: return
-        path=self.view_store.root/'events'/r['event_id']/'evidence.png'; image=read_image(path) if path.exists() else None
+        path=self.view_store.evidence_path(r['event_id']); image=read_image(path) if path.exists() else None
         if image is not None:
             box=r.get('evidence_observation',r)['box']; x1,y1,x2,y2=map(int,box); cv2.rectangle(image,(x1,y1),(x2,y2),(0,200,255),2)
             rgb=cv2.cvtColor(image,cv2.COLOR_BGR2RGB); h,w=rgb.shape[:2]; q=QImage(rgb.data,w,h,rgb.strides[0],QImage.Format_RGB888).copy(); self.image.setPixmap(QPixmap.fromImage(q).scaled(self.image.size(),Qt.KeepAspectRatio,Qt.SmoothTransformation))

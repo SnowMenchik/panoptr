@@ -57,7 +57,7 @@ class FinaleDialog(QDialog):
         p.policy.update(zone=[],speed_kmh=0.,visible_length_m=0.,geometry_calibration_file='');p._inference_settings_changed()
         self.current_config=cfg;self.truth_class.setText(TASKS[self.task.currentData()]['classes'][0]);self.last_signature=self.fingerprint();self.last_running=p.running
         if self.series:self.series.action('configuration_changed','Применён новый профиль '+cfg['task'])
-        write(self.window.event_store.root/f'channel_{p.channel}_finale_profile.json',cfg);self.profile_note.setText(cfg['profile']['title']+f" · колея {cfg['profile']['gauge_mm']:g} мм. Калибровка не применена; расстояния неизвестны. Перед новой серией удалите объект и дождитесь окончания старого сопровождения.");self.state.setText('Профиль готов. Запустите канал, затем создайте серию испытаний.')
+        self.window.event_store.write_json(f'channel_{p.channel}_finale_profile.json',cfg);self.profile_note.setText(cfg['profile']['title']+f" · колея {cfg['profile']['gauge_mm']:g} мм. Калибровка не применена; расстояния неизвестны. Перед новой серией удалите объект и дождитесь окончания старого сопровождения.");self.state.setText('Профиль готов. Запустите канал, затем создайте серию испытаний.')
     def start_channel(self):
         if not self.current_config:raise ValueError('Сначала примените профиль.')
         if self.series:self.series.action('start_channel','Запуск канала испытателем')
@@ -90,7 +90,7 @@ class FinaleDialog(QDialog):
         from copy import deepcopy
         p=self.panel();opts=p.options();cfg=deepcopy(self.current_config);cfg.update(model=opts.model,model_sha256=digest(opts.model),device=opts.device,image_size=opts.image_size,confidence=opts.confidence,
           channel=p.channel,source_kind='file' if p.source.currentIndex()==1 else 'camera',source=p.source_path.text() if p.source.currentIndex()==1 else str(p.selected_camera_index()),policy=deepcopy(p.policy),inference_fps=p.inference_fps.value())
-        self.series=TrialSeries(self.window.event_store.root/'finale'/uuid.uuid4().hex,cfg,self.operator.text(),self.window.event_store.root)
+        active_root=self.window.event_store.active_root; self.series=TrialSeries(active_root/'finale'/uuid.uuid4().hex,cfg,self.operator.text(),active_root)
         self.read_only_series=False
         self.last_signature=self.fingerprint();self.last_running=self.panel().running;self.operator.setReadOnly(True);self.refresh_trials();self.state.setText('Серия создана. Начните целевой или отрицательный опыт.')
     def begin_trial(self):
