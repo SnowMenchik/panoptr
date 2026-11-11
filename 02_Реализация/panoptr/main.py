@@ -772,6 +772,7 @@ class CameraPanel(QGroupBox):
         self.inference_fps = QSpinBox()
         self.inference_fps.setRange(1, 30)
         self.inference_fps.setValue(defaults["inference_fps"])
+        self.inference_fps.setToolTip("Ориентир частоты подачи кадров на анализ модели для этого канала. Фактическая частота может быть ниже из-за нагрузки; это не FPS камеры.")
 
         self.image_size = QComboBox()
         self.image_size.addItems(["320", "416", "512", "640", "960", "1024", "1280", "1536"])

@@ -1,6 +1,8 @@
 """Unified competition final design system («Инженеры транспорта» / ОАО «РЖД» / ВСМ)."""
 from __future__ import annotations
 
+from pathlib import Path
+
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QPalette
 from PySide6.QtWidgets import (
@@ -140,6 +142,45 @@ QLineEdit:focus, QComboBox:focus, QSpinBox:focus, QDoubleSpinBox:focus, QPlainTe
     border: 1.5px solid #305BA7;
     background-color: #FAFCFF;
 }
+/* Keep controls inside the border and use explicit high-contrast arrows. */
+QComboBox { padding-right: 29px; }
+QComboBox::drop-down {
+    subcontrol-origin: border;
+    subcontrol-position: top right;
+    width: 24px;
+    border: 1px solid #94A3B8;
+    border-left-color: #CBD5E1;
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px;
+    background-color: #EEF3FB;
+}
+QComboBox::drop-down:hover { background-color: #DBEAFE; }
+QComboBox::down-arrow { image: url("__ARROW_DOWN__"); width: 13px; height: 8px; }
+QSpinBox, QDoubleSpinBox { padding-right: 28px; }
+QSpinBox::up-button, QDoubleSpinBox::up-button {
+    subcontrol-origin: border;
+    subcontrol-position: top right;
+    width: 23px;
+    border: 1px solid #94A3B8;
+    border-left-color: #CBD5E1;
+    border-bottom: none;
+    border-top-right-radius: 4px;
+    background-color: #EEF3FB;
+}
+QSpinBox::down-button, QDoubleSpinBox::down-button {
+    subcontrol-origin: border;
+    subcontrol-position: bottom right;
+    width: 23px;
+    border: 1px solid #94A3B8;
+    border-left-color: #CBD5E1;
+    border-top-color: #CBD5E1;
+    border-bottom-right-radius: 4px;
+    background-color: #EEF3FB;
+}
+QSpinBox::up-button:hover, QSpinBox::down-button:hover,
+QDoubleSpinBox::up-button:hover, QDoubleSpinBox::down-button:hover { background-color: #DBEAFE; }
+QSpinBox::up-arrow, QDoubleSpinBox::up-arrow { image: url("__ARROW_UP__"); width: 13px; height: 8px; }
+QSpinBox::down-arrow, QDoubleSpinBox::down-arrow { image: url("__ARROW_DOWN__"); width: 13px; height: 8px; }
 QTableWidget, QTableView {
     background-color: #FFFFFF;
     alternate-background-color: #F8FAFC;
@@ -171,6 +212,11 @@ QScrollBar::handle:vertical:hover {
     background: #305BA7;
 }
 """
+
+_ASSETS = Path(__file__).resolve().parent / "assets"
+COMPETITION_QSS = (COMPETITION_QSS
+    .replace("__ARROW_UP__", (_ASSETS / "arrow-up.png").as_posix())
+    .replace("__ARROW_DOWN__", (_ASSETS / "arrow-down.png").as_posix()))
 
 
 def _classify_button_role(text: str) -> str:
