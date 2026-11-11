@@ -4,7 +4,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QColor, QPalette
+from PySide6.QtGui import QBrush, QColor, QFont, QPalette
 from PySide6.QtWidgets import (
     QApplication,
     QFrame,
@@ -322,3 +322,73 @@ def apply_competition_theme(widget: QWidget | None = None) -> None:
             app.setStyleSheet(COMPETITION_QSS)
     if isinstance(widget, QWidget):
         style_buttons_in_widget(widget)
+
+
+# --- Row colour coding for operator decisions and route states -----------------
+# Colours are deliberately light backgrounds with dark text: the row stays
+# readable on a projector, the status text itself is never replaced by colour.
+DECISION_STYLES = {
+    "accepted": {"bg": "#E4F4EA", "fg": "#14663A", "border": "#2E8B57", "mark": "+", "label": "Подтверждено"},
+    "rejected": {"bg": "#FDECEA", "fg": "#A1281D", "border": "#C0392B", "mark": "x", "label": "Отклонено"},
+    "closed": {"bg": "#EEF1F5", "fg": "#41506B", "border": "#7A8699", "mark": "-", "label": "Закрыто без решения"},
+    "unreviewed": {"bg": "#FFF6E0", "fg": "#8A5A00", "border": "#C98A00", "mark": "?", "label": "Не проверено"},
+}
+ROUTE_STYLES = {
+    "На проверке": {"bg": "#FFF6E0", "fg": "#8A5A00", "border": "#C98A00"},
+    "Подтверждено": {"bg": "#E4F4EA", "fg": "#14663A", "border": "#2E8B57"},
+    "Устарело": {"bg": "#EEF1F5", "fg": "#41506B", "border": "#7A8699"},
+    "Отклонено": {"bg": "#FDECEA", "fg": "#A1281D", "border": "#C0392B"},
+    "Закрыто": {"bg": "#F1F5F9", "fg": "#334155", "border": "#94A3B8"},
+}
+TRIAL_STYLES = {
+    "running": {"bg": "#FFF6E0", "fg": "#8A5A00", "border": "#C98A00"},
+    "completed": {"bg": "#EEF3FB", "fg": "#1E3F7A", "border": "#305BA7"},
+    "reviewed": {"bg": "#E4F4EA", "fg": "#14663A", "border": "#2E8B57"},
+    "interrupted": {"bg": "#FDECEA", "fg": "#A1281D", "border": "#C0392B"},
+}
+
+
+def decision_style(status: str) -> dict:
+    return DECISION_STYLES.get(status, DECISION_STYLES["unreviewed"])
+
+
+def paint_row(table, row: int, style: dict, skip_columns=()) -> None:
+    """Paint one table row without touching the text of any cell."""
+    if not style:
+        return
+    for column in range(table.columnCount()):
+        if column in skip_columns:
+            continue
+        item = table.item(row, column)
+        if item is None:
+            continue
+        item.setBackground(QBrush(QColor(style["bg"])))
+        item.setForeground(QBrush(QColor(style["fg"])))
+
+
+def paint_status_cell(item, style: dict, text: str | None = None) -> None:
+    """Make the status cell the strongest colour signal in the row."""
+    if item is None or not style:
+        return
+    item.setText(text if text is not None else item.text())
+    item.setBackground(QBrush(QColor(style["bg"])))
+    item.setForeground(QBrush(QColor(style["fg"])))
+    font = QFont(item.font())
+    font.setBold(True)
+    item.setFont(font)
+
+
+def legend_html(items) -> str:
+    """Colour chips + labels for a legend line under a table."""
+    chips = []
+    for bg, fg, text in items:
+        chips.append(
+            f'<span style="background-color:{bg}; color:{fg}; border:1px solid {fg};'
+            f' padding:1px 7px; font-weight:700;">{text}</span>'
+        )
+    return "&nbsp; ".join(chips)
+
+
+def decision_legend_html() -> str:
+    order = ["accepted", "rejected", "closed", "unreviewed"]
+    return legend_html([(DECISION_STYLES[k]["bg"], DECISION_STYLES[k]["fg"], DECISION_STYLES[k]["label"]) for k in order])

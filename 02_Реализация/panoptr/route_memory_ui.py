@@ -7,7 +7,8 @@ from PySide6.QtGui import QColor,QPen,QBrush,QPixmap,QFont,QFontDatabase
 from PySide6.QtWidgets import (QApplication,QMainWindow,QWidget,QVBoxLayout,QHBoxLayout,QLabel,
     QPushButton,QTableWidget,QTableWidgetItem,QTabWidget,QPlainTextEdit,QFileDialog,QMessageBox,
     QDialog,QDialogButtonBox,QFormLayout,QLineEdit,QDoubleSpinBox,QComboBox,QGraphicsView,QGraphicsScene,QGraphicsItem,QSplitter)
-from route_memory import RouteMemory,LABELS,utcnow,stamp,session_packets,import_file,seed_demo
+from route_memory import RouteMemory,LABELS,stamp,session_packets,import_file,seed_demo
+from ui_theme import ROUTE_STYLES,paint_row,paint_status_cell,legend_html
 
 DEFAULT_DB=Path(__file__).resolve().parents[2]/'data/route_memory/route_memory.sqlite'
 STATES={'pending':'На проверке','confirmed':'Подтверждено','rejected':'Отклонено','closed':'Закрыто'}
@@ -72,6 +73,9 @@ class RouteMemoryWindow(QMainWindow):
         details=QWidget(); dl=QVBoxLayout(details); self.detail=QPlainTextEdit(); self.detail.setReadOnly(True); dl.addWidget(self.detail)
         self.evidence=QLabel('Кадр из подключённого журнала'); self.evidence.setAlignment(Qt.AlignCenter); self.evidence.setWordWrap(True); self.evidence.setMinimumHeight(110); dl.addWidget(self.evidence)
         split.addWidget(details); split.setSizes([780,400])
+        self.legend=QLabel(); self.legend.setTextFormat(Qt.RichText); self.legend.setWordWrap(True)
+        self.legend.setText('Цвет строки — статус проверки (текст статуса остаётся в столбце «Статус»): '+legend_html([(ROUTE_STYLES[k]['bg'],ROUTE_STYLES[k]['fg'],k) for k in ['На проверке','Подтверждено','Устарело','Отклонено','Закрыто']])+'. «Устарело» — подтверждение истекло, объект нужно проверить снова.')
+        map_layout.addWidget(self.legend)
         actions=QHBoxLayout(); map_layout.addLayout(actions)
         for label,action in [('Подтвердить','confirm'),('Отклонить','reject'),('Закрыть по проверке','close'),('На повторную проверку','reopen')]:
             button=QPushButton(label); button.clicked.connect(lambda checked=False,a=action:self.decide(a)); actions.addWidget(button)
@@ -114,6 +118,12 @@ class RouteMemoryWindow(QMainWindow):
         if not values:return
         self.session=(Path(session),values['train'],values['run']); self.session_cache={}
         self.tick()
+        self.update_status()
+        QMessageBox.information(self,'Журнал подключён',
+            f'Журнал: {self.session[0]}\nПоезд / рейс: {values["train"]} / {values["run"]}\n'
+            f'Принято наблюдений: {len(self.session_cache)}\nОбъектов с проверенным местом: {len(getattr(self,"all_rows",[]))}\nНаблюдений без места: {len(self.unknown)}\n\n'
+            'Что делать дальше: если все наблюдения без координат, откройте вкладку «Без места», выберите строку и нажмите «Указать проверенное место выбранного наблюдения». '
+            'Координата поезда не считается местом объекта, поэтому такие события не появляются на карте, пока место не указано вручную.')
 
     def tick(self):
         try:
@@ -124,7 +134,7 @@ class RouteMemoryWindow(QMainWindow):
                     if key in self.session_cache: continue
                     self.memory.ingest(packet); self.session_cache[key]=packet; imported+=1
                     if imported>=200: break
-                self.status.setText(f'Журнал подключён: {path} | Принято событий: {len(self.session_cache)}. Без координат — вкладка «Без места».')
+                self.update_status(prefix=f'Журнал подключён: {path} | Принято событий: {len(self.session_cache)}. ')
             self.refresh()
             if self.tabs.currentIndex()==2:self.preview()
         except Exception as e: self.status.setText('Ошибка приёма, повтор через 3 с: '+str(e))
@@ -147,6 +157,17 @@ class RouteMemoryWindow(QMainWindow):
             if obs['id']==selected_unknown:self.unlocated_table.selectRow(i)
         self.unlocated_table.blockSignals(False)
         self.unlocated_table.resizeColumnsToContents()
+        self.update_status()
+        if self.session and not getattr(self,'all_rows',[]) and self.unknown and self.tabs.currentIndex()==0:
+            # Nothing can be drawn on the chainage map: show where the data actually is.
+            self.tabs.setCurrentIndex(1)
+
+    def update_status(self,prefix=''):
+        located=len(getattr(self,'all_rows',[])); unknown=len(getattr(self,'unknown',[]))
+        text=f'{prefix}Хранилище: {self.memory.path} · объектов с проверенным местом: {located} · наблюдений без места: {unknown}'
+        if self.session: text+=f' · журнал: {self.session[0]}'
+        if unknown and not located: text+='. Все принятые наблюдения без координат объекта: откройте вкладку «Без места» и укажите место — только после этого событие появится на карте.'
+        self.status.setText(text)
 
     def change_route(self,*args):
         if self.refreshing:return
@@ -158,8 +179,10 @@ class RouteMemoryWindow(QMainWindow):
     def draw(self,*args):
         if self.refreshing:return
         selected=self.selected_id(); self.rows=[]
+        current_route=self.route.currentText(); current_track=self.track.currentText()
         for r in self.all_rows:
-            if r['route']!=self.route.currentText() or r['track']!=self.track.currentText():continue
+            if current_route and r['route']!=current_route:continue
+            if current_track and r['track']!=current_track:continue
             state='Устарело' if r['state'] in ('confirmed','pending') and r['stale'] else STATES[r['state']]
             if self.state.currentText() not in ('Все',state):continue
             self.rows.append({**r,'display_state':state})
@@ -174,13 +197,19 @@ class RouteMemoryWindow(QMainWindow):
             color='#c6382d' if r['fresh'] else ('#68706a' if r['state'] in ('closed','rejected') or r['stale'] else '#b77b20')
             for j,v in enumerate(values):
                 item=QTableWidgetItem(str(v)); item.setToolTip(str(v)); self.table.setItem(i,j,item)
+            style=ROUTE_STYLES.get(r['display_state'])
+            if style:
+                paint_row(self.table,i,style); paint_status_cell(self.table.item(i,2),style,r['display_state'])
             x=50+(r['chainage']-low)/(high-low)*1000
             marker=self.scene.addEllipse(x-6,89,12,12,QPen(QColor(color)),QBrush(QColor(color)))
             marker.setData(0,r['id']); marker.setFlag(QGraphicsItem.ItemIsSelectable,True)
             marker.setToolTip(f"{LABELS[r['kind']]} · {r['chainage']/1000:.3f} км · {r['display_state']}")
             label=self.scene.addText(f"{r['chainage']/1000:.3f} км\n{LABELS[r['kind']]}"); label.setPos(x-32,110 if i%2 else 30)
             if r['id']==selected:self.table.selectRow(i)
-        self.scene.addText(f'{self.route.currentText()} / путь {self.track.currentText()} · положение по километражу').setPos(45,0)
+        self.scene.addText(f'{current_route or "нет линии"} / путь {current_track or "нет пути"} · положение по километражу').setPos(45,0)
+        if not self.rows:
+            hint='Нет объектов с проверенным местом.'+(f' Наблюдений без места: {len(self.unknown)} — откройте вкладку «Без места» и укажите место объекта.' if self.unknown else ' Загрузите демо или подключите журнал.')
+            text=self.scene.addText(hint); text.setTextWidth(980); text.setPos(45,35)
         self.scene.blockSignals(False); self.table.blockSignals(False)
         for column,width in enumerate((110,70,125,115,60,85,190)):self.table.setColumnWidth(column,width)
         self.map.fitInView(self.scene.sceneRect(),Qt.KeepAspectRatio)
@@ -245,6 +274,9 @@ class RouteMemoryWindow(QMainWindow):
         except Exception as e:self.fail(e)
 
     def preview(self):
+        if not self.route.currentText() or not self.track.currentText():
+            self.preview_text.setPlainText('Сначала появились бы линия и путь: сейчас нет ни одного объекта с проверенным местом. Подключите журнал, укажите места наблюдений на вкладке «Без места» или нажмите «Демо двух рейсов», чтобы увидеть пример. Отсутствие предупреждений не подтверждает свободный путь.')
+            return
         try:
             rows=self.memory.warnings(self.route.currentText(),self.track.currentText(),self.position.value()*1000,
                 1 if self.direction.currentIndex()==0 else -1,self.distance.value()*1000,self.run.text())

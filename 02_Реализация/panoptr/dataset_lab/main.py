@@ -10,7 +10,7 @@ from PySide6.QtCore import QProcess, Qt
 from PySide6.QtGui import QImage,QPixmap,QFont,QFontDatabase
 from PySide6.QtWidgets import (QApplication,QMainWindow,QWidget,QVBoxLayout,QHBoxLayout,QFormLayout,QLineEdit,
     QPushButton,QComboBox,QCheckBox,QDoubleSpinBox,QSpinBox,QTabWidget,QPlainTextEdit,QLabel,QTableWidget,
-    QTableWidgetItem,QFileDialog,QMessageBox,QSplitter)
+    QTableWidgetItem,QFileDialog,QMessageBox)
 from core import read,dump,decode_mask,boxes_for
 
 ROOT=Path(__file__).resolve().parent
@@ -78,6 +78,11 @@ class LabWindow(QMainWindow):
         self.button(row,'Проверить данные',self.audit_data); self.button(row,'Подготовить набор и BAT',self.prepare_data)
         self.button(row,'Создать репетицию',self.demo); self.button(row,'Загрузить конфигурацию',self.load_config)
         self.button(row,'Видео → кадры',self.video_frames)
+        row2=QHBoxLayout(); layout.addLayout(row2)
+        self.button(row2,'Проверить корректный набор репетиции',lambda:self.audit_demo('good'))
+        self.button(row2,'Проверить набор с ошибками',lambda:self.audit_demo('broken'))
+        demo_hint=QLabel('Репетиция — это один клик: «Создать репетицию» создаёт в 10_Лаборатория_данных новую папку rehearsal_… с искусственными кадрами и двумя конфигурациями. Затем нажмите «Проверить корректный набор репетиции» (ожидается 0 ошибок) и «Проверить набор с ошибками» (ожидаются пропущенная маска, неверный размер, неизвестный ID класса и дубликат с другой разметкой). Файлы вручную искать не нужно.')
+        demo_hint.setWordWrap(True); layout.addWidget(demo_hint)
         self.summary=QLabel('PNG-маски сохраняются попиксельно. COCO в этой версии импортируется как bbox; crowd/ignore блокируют автоматическое преобразование.'); self.summary.setWordWrap(True); layout.addWidget(self.summary)
         self.table=QTableWidget(0,3); self.table.setHorizontalHeaderLabels(['Изображение','Разметка','Сцена']); self.table.horizontalHeader().setStretchLastSection(True); self.table.itemSelectionChanged.connect(self.preview)
         self.table.setColumnWidth(0,400); self.table.setColumnWidth(1,400)
@@ -131,7 +136,25 @@ class LabWindow(QMainWindow):
         except Exception as exc: QMessageBox.warning(self,'Лаборатория',str(exc))
 
     def audit_data(self):
-        self.safe(lambda:self.start('audit',['audit','--config',str(self.snapshot()),'--output',str(self.session/'audit.json')]))
+        def action():
+            self.last_audit=self.session/'audit.json'
+            self.audited_config=str(self.snapshot())
+            self.start('audit',['audit','--config',self.audited_config,'--output',str(self.last_audit)])
+        self.safe(action)
+
+    def _latest_rehearsal(self):
+        folders=sorted((p for p in WORK.glob('rehearsal_*') if p.is_dir()),key=lambda p:p.name)
+        if not folders: raise ValueError('Репетиции ещё нет: сначала нажмите «Создать репетицию».')
+        return folders[-1]
+
+    def audit_demo(self,which):
+        def action():
+            name='good_config.json' if which=='good' else 'broken_config.json'
+            config=self._latest_rehearsal()/name
+            if not config.is_file(): raise ValueError('Не найден '+name+': создайте репетицию заново.')
+            self.set_cfg(read(config)); self.last_audit=self.session/f'audit_{which}.json'; self.audited_config=str(config); self.demo_audit_kind=which
+            self.start('audit',['audit','--config',str(config),'--output',str(self.last_audit)])
+        self.safe(action)
 
     def prepare_data(self):
         def action():
@@ -203,7 +226,7 @@ class LabWindow(QMainWindow):
         def update():
             if code!=0: return
             if self.current_operation=='audit':
-                report=read(self.session/'audit.json'); self.current_report=report
+                report=read(getattr(self,'last_audit',self.session/'audit.json')); self.current_report=report
                 self.summary.setText(f"Пар: {len(report['records'])}; групп: {report['group_count']}; ошибок: {len(report['issues'])}. Значения масок: {report['mask_values']}. " + ('Можно готовить набор.' if report['ready'] else 'Подготовка заблокирована.'))
                 checked={r['image']:r for r in report['records']}
                 self.preview_rows=[checked.get(r['image'],r) for r in report['pairs']]
@@ -212,6 +235,10 @@ class LabWindow(QMainWindow):
                     for j,value in enumerate([r['image'],r['annotation'],r.get('group',r.get('explicit_group','Не проверено'))]):
                         item=QTableWidgetItem(Path(value).name if j<2 else value); item.setToolTip(value); self.table.setItem(i,j,item)
                 self.log.appendPlainText('\n'.join(report['issues']))
+                if getattr(self,'demo_audit_kind',None):
+                    expected='0 ошибок — набор пригоден для подготовки' if self.demo_audit_kind=='good' else 'ожидаются намеренные ошибки: пропущенная маска, неверный размер, неизвестный ID класса 17, дубликат с другой разметкой (5 замечаний)'
+                    self.summary.setText(self.summary.text()+f' Репетиция ({self.demo_audit_kind}): {expected}. Ничего не изменено, обучение не запускалось.')
+                    self.demo_audit_kind=None
                 if self.preview_rows: self.table.selectRow(0)
             elif self.current_operation=='prepare':
                 self.dataset.setText(self.prepared_output); self.eval_dataset.setText(self.prepared_output)
@@ -219,7 +246,8 @@ class LabWindow(QMainWindow):
                 self.summary.setText('Набор подготовлен. BAT и training.json сохранены рядом с dataset.json. Обучение не запускалось.')
             elif self.current_operation=='demo':
                 self.set_cfg(read(self.demo_output/'good_config.json')); self.output.setText(str(self.demo_output/'prepared'))
-                self.log.appendPlainText('Для проверки ошибок загрузите broken_config.json из '+str(self.demo_output))
+                self.summary.setText('Репетиция создана: '+str(self.demo_output)+'. Дальше: «Проверить корректный набор репетиции» (ожидается 0 ошибок) и «Проверить набор с ошибками» (ожидаются намеренные ошибки: пропущенная маска, неверный размер, неизвестный ID класса, дубликат). Это искусственные данные для проверки инструмента, а не качество на железной дороге.')
+                self.log.appendPlainText('Репетиция создана в '+str(self.demo_output))
         self.safe(update)
 
     def preview(self):
