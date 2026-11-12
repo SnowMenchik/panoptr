@@ -1,0 +1,12 @@
+runtime/
+examples/
+data/
+11_Финальный_модуль/
+02_Реализация/panoptr/models/
+02_Реализация/panoptr/*.pt
+02_Реализация/panoptr/dataset_lab/annotation_vendor/
+08_Обучение/models/
+09_Дополнительные_данные_2026-10-11/
+10_Лаборатория_данных/annotation_models/
+__pycache__/
+*.pyc
